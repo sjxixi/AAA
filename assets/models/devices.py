@@ -1,0 +1,100 @@
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+from simple_history.models import HistoricalRecords
+from .datacenter import DataCenter
+
+class BaseDevice(models.Model):
+    """设备基类"""
+    name = models.CharField('名称', max_length=100)
+    model = models.CharField('型号', max_length=100)
+    sn = models.CharField('序列号', max_length=100, unique=True)
+    manufacturer = models.CharField('制造商', max_length=100)
+    purchase_date = models.DateField('采购日期')
+    warranty_date = models.DateField('保修期限')
+    status = models.CharField('状态', max_length=20, choices=[(k, v) for k, v in settings.DEVICE_STATUS.items()])
+    data_center = models.ForeignKey(DataCenter, on_delete=models.PROTECT, verbose_name='所属数据中心')
+    rack_position = models.CharField('机架位置', max_length=50)
+    ip_address = models.GenericIPAddressField('IP地址', unique=True)
+    mac_address = models.CharField('MAC地址', max_length=17, unique=True)
+    description = models.TextField('描述', blank=True)
+    created_time = models.DateTimeField('创建时间', default=timezone.now)
+    updated_time = models.DateTimeField('更新时间', auto_now=True)
+
+    class Meta:
+        abstract = True
+
+class Server(BaseDevice):
+    """服务器模型"""
+    hostname = models.CharField('主机名', max_length=100, unique=True)
+    cpu_model = models.CharField('CPU型号', max_length=100)
+    cpu_count = models.IntegerField('CPU数量')
+    cpu_cores = models.IntegerField('CPU核心数')
+    memory_size = models.IntegerField('内存大小(GB)')
+    disk_info = models.TextField('硬盘信息')
+    os_type = models.CharField('操作系统类型', max_length=50)
+    os_version = models.CharField('操作系统版本', max_length=50)
+    business_system = models.CharField('业务系统', max_length=100)
+    
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = '服务器'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.hostname
+
+class NetworkDevice(BaseDevice):
+    """网络设备模型"""
+    device_type = models.CharField('设备类型', max_length=50)  # 如交换机、路由器等
+    port_count = models.IntegerField('端口数量')
+    port_info = models.TextField('端口信息')
+    management_ip = models.GenericIPAddressField('管理IP', unique=True)
+    vlan_info = models.TextField('VLAN配置')
+    routing_info = models.TextField('路由信息', blank=True)
+    
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = '网络设备'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.name
+
+class StorageDevice(BaseDevice):
+    """存储设备模型"""
+    storage_type = models.CharField('存储类型', max_length=50)  # 如SAN、NAS等
+    total_capacity = models.DecimalField('总容量(TB)', max_digits=10, decimal_places=2)
+    used_capacity = models.DecimalField('已用容量(TB)', max_digits=10, decimal_places=2)
+    raid_type = models.CharField('RAID类型', max_length=50)
+    raid_config = models.TextField('RAID配置')
+    controller_info = models.TextField('控制器信息')
+    
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = '存储设备'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.name
+
+class SecurityDevice(BaseDevice):
+    """安全设备模型"""
+    device_type = models.CharField('设备类型', max_length=50)  # 如防火墙、IDS等
+    software_version = models.CharField('软件版本', max_length=50)
+    rule_version = models.CharField('规则库版本', max_length=50)
+    policy_info = models.TextField('策略配置')
+    log_info = models.TextField('日志配置')
+    monitor_info = models.TextField('监控配置')
+    
+    history = HistoricalRecords()
+
+    class Meta:
+        verbose_name = '安全设备'
+        verbose_name_plural = verbose_name
+
+    def __str__(self):
+        return self.name 

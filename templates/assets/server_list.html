@@ -1,0 +1,21 @@
+{% extends 'assets/device_base.html' %}
+
+{% block table_headers %}
+<th class="col-name">名称</th>
+<th class="col-name">主机名</th>
+<th class="col-ip">IP地址</th>
+<th class="col-text">操作系统</th>
+<th class="col-text">业务系统</th>
+<th class="col-datacenter">数据中心</th>
+<th class="col-status">状态</th>
+{% endblock %}
+
+{% block table_cells %}
+<td class="text-nowrap">{{ device.name }}</td>
+<td class="text-nowrap">{{ device.hostname }}</td>
+<td class="text-nowrap">{{ device.ip_address }}</td>
+<td class="text-wrap">{{ device.os_type }} {{ device.os_version }}</td>
+<td class="text-wrap">{{ device.business_system }}</td>
+<td class="text-nowrap">{{ device.data_center }}</td>
+<td class="text-nowrap">{{ device.get_status_display }}</td>
+{% endblock %} 

@@ -1,0 +1,42 @@
+{% extends 'assets/device_base.html' %}
+
+{% block table_headers %}
+<th class="col-name">名称</th>
+<th class="col-ip">IP地址</th>
+<th class="col-text">设备类型</th>
+<th class="col-text">端口数量</th>
+<th class="col-datacenter">数据中心</th>
+<th class="col-status">状态</th>
+{% endblock %}
+
+{% block table_cells %}
+<td class="text-nowrap">{{ device.name }}</td>
+<td class="text-nowrap">{{ device.ip_address }}</td>
+<td class="text-wrap">{{ device.device_type }}</td>
+<td class="text-end">{{ device.port_count }}</td>
+<td class="text-nowrap">{{ device.data_center }}</td>
+<td class="text-nowrap">{{ device.get_status_display }}</td>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 添加设备类型映射
+const deviceTypes = {
+    'NetworkDevice': '网络设备',
+    'Server': '服务器',
+    'StorageDevice': '存储设备',
+    'SecurityDevice': '安全设备'
+};
+
+// 获取当前设备类型
+const currentDeviceType = deviceTypes['{{ model_name }}'];
+
+// 修改删除按钮的点击事件
+document.querySelectorAll('.btn-danger').forEach(btn => {
+    btn.onclick = function() {
+        const deviceId = this.dataset.id;
+        confirmDelete(currentDeviceType, deviceId);
+    };
+});
+</script>
+{% endblock %} 

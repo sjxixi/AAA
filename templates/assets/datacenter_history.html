@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ datacenter.name }} - 历史记录{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>{{ datacenter.name }} - 历史记录</h2>
+        <a href="{% url 'assets:datacenter_list' %}" class="btn btn-secondary">返回列表</a>
+    </div>
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th>修改时间</th>
+                <th>修改人</th>
+                <th>操作类型</th>
+                <th>修改内容</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in history %}
+            <tr>
+                <td>{{ record.history_date|date:"Y-m-d H:i:s" }}</td>
+                <td>{{ record.history_user|default:"系统" }}</td>
+                <td>
+                    {% if record.history_type == '+' %}
+                        <span class="badge bg-success">新增</span>
+                    {% elif record.history_type == '-' %}
+                        <span class="badge bg-danger">删除</span>
+                    {% else %}
+                        <span class="badge bg-info">修改</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if record.history_type == '+' %}
+                        <ul class="mb-0">
+                            <li>名称: {{ record.name }}</li>
+                            <li>位置: {{ record.location }}</li>
+                            <li>联系人: {{ record.contact_name }}</li>
+                            <li>联系电话: {{ record.contact_phone }}</li>
+                            <li>面积: {{ record.area }} 平方米</li>
+                            <li>电力容量: {{ record.power_capacity }} KW</li>
+                            <li>制冷能力: {{ record.cooling_capacity }} KW</li>
+                        </ul>
+                    {% elif record.history_type == '-' %}
+                        删除了数据中心记录
+                    {% else %}
+                        <ul class="mb-0">
+                        {% for change in record.changes %}
+                            <li>
+                                {{ change.field }}:
+                                {{ change.old }} → {{ change.new }}
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.badge {
+    padding: 0.5em 1em;
+    border-radius: 4px;
+    color: white;
+}
+.bg-success { background-color: #28a745; }
+.bg-danger { background-color: #dc3545; }
+.bg-info { background-color: #17a2b8; }
+ul { list-style-type: none; padding-left: 0; }
+.mb-0 { margin-bottom: 0; }
+</style>
+{% endblock %} 

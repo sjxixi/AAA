@@ -1,0 +1,21 @@
+{% extends 'assets/device_base.html' %}
+
+{% block table_headers %}
+<th class="col-name">名称</th>
+<th class="col-ip">IP地址</th>
+<th class="col-text">存储类型</th>
+<th class="col-text">总容量(TB)</th>
+<th class="col-text">已用容量(TB)</th>
+<th class="col-datacenter">数据中心</th>
+<th class="col-status">状态</th>
+{% endblock %}
+
+{% block table_cells %}
+<td class="text-nowrap">{{ device.name }}</td>
+<td class="text-nowrap">{{ device.ip_address }}</td>
+<td class="text-wrap">{{ device.storage_type }}</td>
+<td class="text-end">{{ device.total_capacity }}</td>
+<td class="text-end">{{ device.used_capacity }}</td>
+<td class="text-nowrap">{{ device.data_center }}</td>
+<td class="text-nowrap">{{ device.get_status_display }}</td>
+{% endblock %} 

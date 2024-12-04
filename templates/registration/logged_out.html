@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="logout-message">
+    <h2>您已成功退出登录</h2>
+    <p>感谢使用CMDB资产管理系统</p>
+    <a href="{% url 'login' %}" class="btn btn-primary">重新登录</a>
+</div>
+
+<style>
+.logout-message {
+    text-align: center;
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+.logout-message h2 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.logout-message p {
+    color: #7f8c8d;
+    margin-bottom: 2rem;
+}
+</style>
+{% endblock %} 

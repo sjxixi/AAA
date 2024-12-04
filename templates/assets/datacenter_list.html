@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}数据中心列表{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>数据中心列表</h2>
+    </div>
+    
+    <div class="search-area">
+        <form method="get" class="search-form">
+            <div class="search-row">
+                {% for field in filter.form %}
+                <div class="search-item">
+                    <label>{{ field.label }}:</label>
+                    {{ field }}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">搜索</button>
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='?'">重置</button>
+                <a href="?export=1" class="btn btn-success">导出Excel</a>
+                <a href="{% url 'assets:datacenter_create' %}" class="btn btn-primary">添加数据中心</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table id="dataTable" class="table sortable">
+            <thead>
+                <tr>
+                    <th class="col-name">名称</th>
+                    <th class="col-location">位置</th>
+                    <th class="col-contact">联系人</th>
+                    <th class="col-phone">联系电话</th>
+                    <th class="col-number">面积(㎡)</th>
+                    <th class="col-number">电力容量(KW)</th>
+                    <th class="col-number">制冷能力(KW)</th>
+                    <th class="col-actions">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dc in filter.qs %}
+                <tr>
+                    <td class="text-nowrap">{{ dc.name }}</td>
+                    <td class="text-wrap">{{ dc.location }}</td>
+                    <td class="text-nowrap">{{ dc.contact_name }}</td>
+                    <td class="text-nowrap">{{ dc.contact_phone }}</td>
+                    <td class="text-end">{{ dc.area }}</td>
+                    <td class="text-end">{{ dc.power_capacity }}</td>
+                    <td class="text-end">{{ dc.cooling_capacity }}</td>
+                    <td class="col-actions">
+                        <div class="action-buttons">
+                            <a href="{% url 'assets:datacenter_detail' dc.id %}" class="btn btn-info btn-sm">查看</a>
+                            <a href="{% url 'assets:datacenter_edit' dc.id %}" class="btn btn-primary btn-sm">编辑</a>
+                            <a href="{% url 'assets:datacenter_history' dc.id %}" class="btn btn-secondary btn-sm">历史</a>
+                            <form method="post" action="{% url 'assets:datacenter_delete' dc.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" 
+                                        onclick="return confirm('确定要删除这个数据中心吗？')">
+                                    删除
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center">暂无数据</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 表格列宽控制 */
+.table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+/* 调整列宽比例 */
+.col-name { width: 12%; }
+.col-location { width: 12%; }
+.col-contact { width: 10%; }
+.col-phone { width: 10%; }
+.col-number { width: 8%; }
+.col-actions { width: 24%; }  /* 增加操作列的宽度 */
+
+/* 文本控制 */
+.text-nowrap {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.text-wrap {
+    white-space: normal;
+    word-break: break-word;
+}
+
+.text-end {
+    text-align: right;
+}
+
+/* 表格响应式 */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 单元格内容控制 */
+td {
+    padding: 0.75rem;
+    vertical-align: middle;
+}
+
+/* 操作按钮组样式 */
+.action-buttons {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.btn-sm {
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 2px;
+    min-width: 50px;
+    transition: all 0.2s;
+}
+
+/* 查看按钮 */
+.btn-info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+}
+
+/* 编辑按钮 */
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+/* 历史按钮 */
+.btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #7f8c8d;
+}
+
+/* 删除按钮 */
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+/* 操作列样式 */
+.col-actions {
+    width: 180px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* 响应式布局调整 */
+@media (max-width: 768px) {
+    .col-actions {
+        width: auto;
+        min-width: 160px;
+    }
+    
+    .action-buttons {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .btn-sm {
+        flex: 1;
+        min-width: 40px;
+    }
+}
+
+/* 搜索区域样式优化 */
+.search-area {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    margin: 15px;
+}
+
+.search-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.search-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.search-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.search-item label {
+    font-size: 14px;
+    color: #333;
+}
+
+.search-item input,
+.search-item select {
+    width: 100%;
+    height: 32px;
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+/* 按钮组样式 */
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+/* 按钮基础样式 */
+.btn {
+    height: 32px;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 88px;
+    transition: background-color 0.2s;
+}
+
+/* 搜索按钮 */
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+/* 重置按钮 */
+.btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #7f8c8d;
+}
+
+/* 导出按钮 */
+.btn-success {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #219a52;
+}
+
+/* 表格中的小按钮样式 */
+.btn-sm {
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
+    min-width: 60px;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+    .search-area {
+        padding: 10px;
+        margin: 10px;
+    }
+
+    .search-row {
+        grid-template-columns: 1fr;
+    }
+
+    .button-group {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %} 

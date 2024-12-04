@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ device.hostname }} - 服务器详情{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>{{ device.hostname }} - 服务器详情</h2>
+        <div class="actions">
+            <a href="{% url 'assets:server_edit' device.id %}" class="btn btn-primary">编辑</a>
+            <a href="{% url 'assets:server_list' %}" class="btn btn-secondary">返回列表</a>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div class="detail-section">
+            <h3>基本信息</h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <label>主机名：</label>
+                    <span>{{ device.hostname }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>IP地址：</label>
+                    <span>{{ device.ip_address }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>MAC地址：</label>
+                    <span>{{ device.mac_address }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>状态：</label>
+                    <span>{{ device.get_status_display }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>数据中心：</label>
+                    <span>{{ device.data_center }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>机架位置：</label>
+                    <span>{{ device.rack_position }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>硬件信息</h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <label>CPU型号：</label>
+                    <span>{{ device.cpu_model }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>CPU数量：</label>
+                    <span>{{ device.cpu_count }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>CPU核心数：</label>
+                    <span>{{ device.cpu_cores }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>内存大小：</label>
+                    <span>{{ device.memory_size }}GB</span>
+                </div>
+            </div>
+            <div class="detail-item full-width">
+                <label>硬盘信息：</label>
+                <pre>{{ device.disk_info }}</pre>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>系统信息</h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <label>操作系统：</label>
+                    <span>{{ device.os_type }} {{ device.os_version }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>业务系统：</label>
+                    <span>{{ device.business_system }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-section">
+            <h3>其他信息</h3>
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <label>序列号：</label>
+                    <span>{{ device.sn }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>制造商：</label>
+                    <span>{{ device.manufacturer }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>采购日期：</label>
+                    <span>{{ device.purchase_date }}</span>
+                </div>
+                <div class="detail-item">
+                    <label>保修期限：</label>
+                    <span>{{ device.warranty_date }}</span>
+                </div>
+            </div>
+            {% if device.description %}
+            <div class="detail-item full-width">
+                <label>描述：</label>
+                <pre>{{ device.description }}</pre>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.detail-section {
+    margin-bottom: 2rem;
+}
+
+.detail-section h3 {
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.detail-item {
+    margin-bottom: 1rem;
+}
+
+.detail-item label {
+    font-weight: bold;
+    color: #495057;
+    margin-bottom: 0.25rem;
+    display: block;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+pre {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    margin: 0;
+}
+</style>
+{% endblock %} 

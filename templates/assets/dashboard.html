@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}仪表盘 - CMDB资产管理系统{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    <div class="stats-container">
+        <div class="stat-card">
+            <h3>数据中心</h3>
+            <div class="stat-number">{{ datacenter_count }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>服务器</h3>
+            <div class="stat-number">{{ server_count }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>网络设备</h3>
+            <div class="stat-number">{{ network_count }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>存储设备</h3>
+            <div class="stat-number">{{ storage_count }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>安全设备</h3>
+            <div class="stat-number">{{ security_count }}</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2>数据中心概览</h2>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>数据中心</th>
+                    <th>服务器数量</th>
+                    <th>网络设备数量</th>
+                    <th>存储设备数量</th>
+                    <th>安全设备数量</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for dc in datacenters %}
+                <tr>
+                    <td><a href="{% url 'assets:datacenter_detail' dc.id %}">{{ dc.name }}</a></td>
+                    <td>{{ dc.server_count }}</td>
+                    <td>{{ dc.network_count }}</td>
+                    <td>{{ dc.storage_count }}</td>
+                    <td>{{ dc.security_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %} 

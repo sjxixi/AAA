@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ device.name }} - 历史记录{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>{{ device.name }} - 历史记录</h2>
+        <a href="{% url view_list %}" class="btn btn-secondary">返回列表</a>
+    </div>
+    
+    <table class="table">
+        <thead>
+            <tr>
+                <th>修改时间</th>
+                <th>修改人</th>
+                <th>操作类型</th>
+                <th>修改内容</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for record in history %}
+            <tr>
+                <td>{{ record.history_date|date:"Y-m-d H:i:s" }}</td>
+                <td>{{ record.history_user|default:"系统" }}</td>
+                <td>
+                    {% if record.history_type == '+' %}
+                        <span class="badge bg-success">新增</span>
+                    {% elif record.history_type == '-' %}
+                        <span class="badge bg-danger">删除</span>
+                    {% else %}
+                        <span class="badge bg-info">修改</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if record.history_type == '+' %}
+                        <ul class="mb-0">
+                            {% for field, value in record.get_fields %}
+                            <li>{{ field }}: {{ value }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% elif record.history_type == '-' %}
+                        删除了设备记录
+                    {% else %}
+                        <ul class="mb-0">
+                        {% for change in record.changes %}
+                            <li>
+                                {{ change.field }}:
+                                {{ change.old }} → {{ change.new }}
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.badge {
+    padding: 0.5em 1em;
+    border-radius: 4px;
+    color: white;
+}
+.bg-success { background-color: #28a745; }
+.bg-danger { background-color: #dc3545; }
+.bg-info { background-color: #17a2b8; }
+ul { list-style-type: none; padding-left: 0; }
+.mb-0 { margin-bottom: 0; }
+</style>
+{% endblock %} 

@@ -1,0 +1,295 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>{{ model_name }}列表</h2>
+    </div>
+    
+    <div class="search-area">
+        <form method="get" class="search-form">
+            <div class="search-row">
+                {% for field in filter.form %}
+                <div class="search-item">
+                    <label>{{ field.label }}:</label>
+                    {{ field }}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">搜索</button>
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='?'">重置</button>
+                <a href="?export=1" class="btn btn-success">导出Excel</a>
+                <a href="{% url view_create %}" class="btn btn-primary">添加{{ model_name }}</a>
+            </div>
+        </form>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                {% block table_headers %}{% endblock %}
+                <th class="col-actions">操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for device in page_obj %}
+            <tr>
+                {% block table_cells %}{% endblock %}
+                <td class="col-actions">
+                    <div class="action-buttons">
+                        <a href="{% url view_detail device.id %}" class="btn btn-info btn-sm">查看</a>
+                        <a href="{% url view_edit device.id %}" class="btn btn-primary btn-sm">编辑</a>
+                        <a href="{% url view_history device.id %}" class="btn btn-secondary btn-sm">历史</a>
+                        <form method="post" action="{% url view_delete pk=device.pk %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm" 
+                                    onclick="return confirm('确定要删除这个{{ model_name }}吗？')">
+                                删除
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center">暂无数据</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; 首页</a>
+            <a href="?page={{ page_obj.previous_page_number }}">上一页</a>
+        {% endif %}
+
+        <span class="current">
+            第 {{ page_obj.number }} 页，共 {{ page_obj.paginator.num_pages }} 页
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">下一页</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">末页 &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 卡片样式 */
+.card {
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    margin: 20px;
+}
+
+.card-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.card-header h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+/* 搜索区域样式 */
+.search-area {
+    padding: 20px;
+    background-color: #f8f9fa;
+    margin: 15px;
+    border-radius: 4px;
+}
+
+.search-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.search-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.search-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.search-item label {
+    font-size: 14px;
+    color: #333;
+}
+
+.search-item input,
+.search-item select {
+    width: 100%;
+    height: 36px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+}
+
+.search-item select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 8.825L1.175 4 2.238 2.938 6 6.7l3.763-3.762L10.825 4z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 12px;
+    padding-right: 24px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* 按钮组样式 */
+.button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.btn {
+    min-width: 100px;
+    height: 36px;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-success {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-sm {
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 2px;
+    min-width: 50px;
+    transition: all 0.2s;
+}
+
+/* 查看按钮 */
+.btn-info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+}
+
+/* 编辑按钮 */
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+/* 历史按钮 */
+.btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #7f8c8d;
+}
+
+/* 删除按钮 */
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+/* 操作列样式 */
+.col-actions {
+    width: 180px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* 表格样式优化 */
+.table td {
+    padding: 8px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #eee;
+}
+
+.table tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* 操作按钮组容器 */
+.action-buttons {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+/* 响应式布局调整 */
+@media (max-width: 768px) {
+    .col-actions {
+        width: auto;
+        min-width: 160px;
+    }
+    
+    .action-buttons {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .btn-sm {
+        flex: 1;
+        min-width: 40px;
+    }
+}
+</style>
+{% endblock %} 

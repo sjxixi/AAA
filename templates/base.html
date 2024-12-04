@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CMDB资产管理系统{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">CMDB资产管理系统</div>
+        <ul class="nav-links">
+            <li><a href="{% url 'assets:dashboard' %}">首页</a></li>
+            <li><a href="{% url 'assets:datacenter_list' %}">数据中心</a></li>
+            <li><a href="{% url 'assets:server_list' %}">服务器</a></li>
+            <li><a href="{% url 'assets:network_list' %}">网络设备</a></li>
+            <li><a href="{% url 'assets:storage_list' %}">存储设备</a></li>
+            <li><a href="{% url 'assets:security_list' %}">安全设备</a></li>
+            {% if user.is_authenticated %}
+                <li>
+                    <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn">退出</button>
+                    </form>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <div class="container">
+        {% include 'includes/messages.html' %}
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2024 CMDB资产管理系统</p>
+    </footer>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+
+    <style>
+        /* 添加退出按钮样式 */
+        .logout-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: inherit;
+            padding: 0;
+            font-family: inherit;
+        }
+        
+        .logout-btn:hover {
+            color: #ddd;
+        }
+    </style>
+</body>
+</html> 
