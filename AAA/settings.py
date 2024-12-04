@@ -100,9 +100,16 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'OPTIONS': {
+            'user_attributes': ('username', 'email'),
+            'max_similarity': 0.7,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -178,3 +185,11 @@ SESSION_COOKIE_AGE = 1209600  # 两周，单位秒
 SESSION_COOKIE_NAME = 'sessionid'
 SESSION_COOKIE_SECURE = False
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_SAVE_EVERY_REQUEST = True
+
+# 记住密码时间(单位:秒)
+REMEMBER_ME_DURATION = 1209600  # 两周
+
+# 登录尝试限制
+MAX_LOGIN_ATTEMPTS = 5
+LOGIN_ATTEMPT_TIMEOUT = 300  # 5分钟

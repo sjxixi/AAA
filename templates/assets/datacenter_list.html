@@ -20,10 +20,18 @@
                 {% endfor %}
             </div>
             <div class="button-group">
-                <button type="submit" class="btn btn-primary">搜索</button>
-                <button type="button" class="btn btn-secondary" onclick="window.location.href='?'">重置</button>
-                <a href="?export=1" class="btn btn-success">导出Excel</a>
-                <a href="{% url 'assets:datacenter_create' %}" class="btn btn-primary">添加数据中心</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> 搜索
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="window.location.href='?'">
+                    <i class="fas fa-redo"></i> 重置
+                </button>
+                <a href="?export=1" class="btn btn-success">
+                    <i class="fas fa-file-export"></i> 导出Excel
+                </a>
+                <a href="{% url 'assets:datacenter_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> 添加数据中心
+                </a>
             </div>
         </form>
     </div>
@@ -54,14 +62,21 @@
                     <td class="text-end">{{ dc.cooling_capacity }}</td>
                     <td class="col-actions">
                         <div class="action-buttons">
-                            <a href="{% url 'assets:datacenter_detail' dc.id %}" class="btn btn-info btn-sm">查看</a>
-                            <a href="{% url 'assets:datacenter_edit' dc.id %}" class="btn btn-primary btn-sm">编辑</a>
-                            <a href="{% url 'assets:datacenter_history' dc.id %}" class="btn btn-secondary btn-sm">历史</a>
+                            <a href="{% url 'assets:datacenter_detail' dc.id %}" class="btn btn-info btn-sm" title="查看详情">
+                                <i class="fas fa-eye"></i> 查看
+                            </a>
+                            <a href="{% url 'assets:datacenter_edit' dc.id %}" class="btn btn-primary btn-sm" title="编辑">
+                                <i class="fas fa-edit"></i> 编辑
+                            </a>
+                            <a href="{% url 'assets:datacenter_history' dc.id %}" class="btn btn-secondary btn-sm" title="历史记录">
+                                <i class="fas fa-history"></i> 历史
+                            </a>
                             <form method="post" action="{% url 'assets:datacenter_delete' dc.id %}" style="display: inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-danger btn-sm" 
-                                        onclick="return confirm('确定要删除这个数据中心吗？')">
-                                    删除
+                                        onclick="return confirm('确定要删除这个数据中心吗？')"
+                                        title="删除">
+                                    <i class="fas fa-trash"></i> 删除
                                 </button>
                             </form>
                         </div>
