@@ -17,6 +17,9 @@ from assets.resources.devices import (
     ServerResource, NetworkDeviceResource, StorageDeviceResource, SecurityDeviceResource
 )
 import datetime
+from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import permission_required
+import json
 
 class BaseDeviceView(View):
     """设备视图基类"""
@@ -58,6 +61,16 @@ class BaseDeviceView(View):
             handler = self.http_method_not_allowed
         return handler(request, *args, **kwargs)
 
+    def get_url_prefix(self):
+        """获取URL前缀"""
+        url_prefixes = {
+            'Server': 'server',
+            'NetworkDevice': 'network',
+            'StorageDevice': 'storage',
+            'SecurityDevice': 'security'
+        }
+        return url_prefixes.get(self.model.__name__, '')
+
     def list_view(self, request):
         """列表视图"""
         # 添加默认排序
@@ -67,7 +80,17 @@ class BaseDeviceView(View):
         # 处理导出请求
         if 'export' in request.GET:
             resource = self.resource_class()
-            dataset = resource.export(filter.qs)
+            # 检查是否有选中的ID
+            selected_ids = request.GET.get('ids', '')
+            if selected_ids:
+                # 如果有选中的ID，只导出选中的数据
+                ids = [int(id) for id in selected_ids.split(',')]
+                queryset = filter.qs.filter(id__in=ids)
+            else:
+                # 否则导出过滤后的所有数据
+                queryset = filter.qs
+            
+            dataset = resource.export(queryset)
             response = HttpResponse(
                 dataset.export('xlsx'),
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
@@ -80,34 +103,18 @@ class BaseDeviceView(View):
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
         
-        # 获取设备类型的中文名称
-        device_types = {
-            'Server': '服务器',
-            'NetworkDevice': '网络设备',
-            'StorageDevice': '存储设备',
-            'SecurityDevice': '安全设备'
-        }
-        model_name = device_types.get(self.model.__name__, '')
-        
-        # 获取URL前缀
-        url_prefixes = {
-            'Server': 'server',
-            'NetworkDevice': 'network',
-            'StorageDevice': 'storage',
-            'SecurityDevice': 'security'
-        }
-        url_prefix = url_prefixes.get(self.model.__name__, '')
-        
         context = {
             'filter': filter,
             'page_obj': page_obj,
-            'model_name': model_name,  # 使用中文名称
-            'view_create': f'assets:{url_prefix}_create',
-            'view_detail': f'assets:{url_prefix}_detail',
-            'view_edit': f'assets:{url_prefix}_edit',
-            'view_delete': f'assets:{url_prefix}_delete',
-            'view_history': f'assets:{url_prefix}_history',
-            'colspan': len(self.model._meta.fields) + 1  # +1 for actions column
+            'model_name': self.model._meta.verbose_name,
+            'model_type': self.model.__name__,
+            'view_create': f'assets:{self.get_url_prefix()}_create',
+            'view_detail': f'assets:{self.get_url_prefix()}_detail',
+            'view_edit': f'assets:{self.get_url_prefix()}_edit',
+            'view_delete': f'assets:{self.get_url_prefix()}_delete',
+            'view_history': f'assets:{self.get_url_prefix()}_history',
+            'view_list': f'assets:{self.get_url_prefix()}_list',
+            'view_batch_delete': 'assets:batch_delete'
         }
         return render(request, self.template_name_list, context)
 
@@ -233,6 +240,11 @@ class BaseDeviceView(View):
         }
         return render(request, 'assets/device_history.html', context)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['model_type'] = self.model.__name__
+        return context
+
 class ServerView(BaseDeviceView):
     template_name_list = 'assets/server_list.html'
     template_name_detail = 'assets/server_detail.html'
@@ -267,4 +279,30 @@ class SecurityDeviceView(BaseDeviceView):
     model = SecurityDevice
     form_class = SecurityDeviceForm
     filter_class = SecurityDeviceFilter
-    resource_class = SecurityDeviceResource 
+    resource_class = SecurityDeviceResource
+
+@require_POST
+@permission_required('assets.delete_device')
+def batch_delete(request):
+    try:
+        data = json.loads(request.body)
+        ids = data.get('ids', [])
+        
+        # 记录操作日志
+        for device_id in ids:
+            device = get_object_or_404(Device, id=device_id)
+            LogEntry.objects.create(
+                user=request.user,
+                content_type=ContentType.objects.get_for_model(device),
+                object_id=device.id,
+                object_repr=str(device),
+                action_flag=DELETION,
+                change_message=f'批量删除操作'
+            )
+        
+        # 执行删除
+        Device.objects.filter(id__in=ids).delete()
+        
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}) 

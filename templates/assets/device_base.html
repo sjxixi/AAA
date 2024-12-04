@@ -10,6 +10,14 @@
     <div class="card">
         <div class="card-header">
             <h2>{{ model_name }}列表</h2>
+            <div class="batch-actions">
+                <button class="btn btn-danger" onclick="batchDelete()">
+                    <i class="fas fa-trash"></i> 批量删除
+                </button>
+                <button class="btn btn-success" onclick="batchExport()">
+                    <i class="fas fa-file-export"></i> 批量导出
+                </button>
+            </div>
         </div>
         
         <div class="search-area">
@@ -35,6 +43,9 @@
                     </a>
                     {% endif %}
                     {% if perms.assets.add_device %}
+                    <button type="button" class="btn btn-info" onclick="showImportModal()">
+                        <i class="fas fa-file-import"></i> 导入Excel
+                    </button>
                     <a href="{% url view_create %}" class="btn btn-primary">
                         <i class="fas fa-plus"></i> 添加{{ model_name }}
                     </a>
@@ -43,56 +54,91 @@
             </form>
         </div>
 
-        <table class="table">
-            <thead>
-                <tr>
-                    {% block table_headers %}{% endblock %}
-                    <th class="col-actions">操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for device in page_obj %}
-                <tr>
-                    {% block table_cells %}{% endblock %}
-                    <td class="col-actions">
-                        <div class="action-buttons">
-                            {% if perms.assets.view_device %}
-                            <a href="{% url view_detail device.id %}" class="btn btn-info btn-sm" title="查看详情">
-                                <i class="fas fa-eye"></i> 查看
-                            </a>
-                            {% endif %}
-                            {% if perms.assets.change_device %}
-                            <a href="{% url view_edit device.id %}" class="btn btn-primary btn-sm" title="编辑">
-                                <i class="fas fa-edit"></i> 编辑
-                            </a>
-                            {% endif %}
-                            {% if perms.assets.view_history %}
-                            <a href="{% url view_history device.id %}" class="btn btn-secondary btn-sm" title="历史记录">
-                                <i class="fas fa-history"></i> 历史
-                            </a>
-                            {% endif %}
-                            {% if perms.assets.delete_device %}
-                            <form method="post" action="{% url view_delete pk=device.pk %}" style="display: inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm" 
-                                        onclick="return confirm('确定要删除这个{{ model_name }}吗？')"
-                                        title="删除">
-                                    <i class="fas fa-trash"></i> 删除
-                                </button>
-                            </form>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="8" class="text-center">暂无数据</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="table sortable">
+                <thead>
+                    <tr>
+                        <th width="40">
+                            <input type="checkbox" id="selectAll" onclick="toggleSelectAll()">
+                        </th>
+                        {% block table_headers %}{% endblock %}
+                        <th class="col-actions">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for device in page_obj %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="selected_items" value="{{ device.id }}">
+                        </td>
+                        {% block table_cells %}{% endblock %}
+                        <td class="col-actions">
+                            <div class="action-buttons">
+                                {% if perms.assets.view_device %}
+                                <a href="{% url view_detail device.id %}" class="btn btn-info btn-sm" title="查看详情">
+                                    <i class="fas fa-eye"></i> 查看
+                                </a>
+                                {% endif %}
+                                {% if perms.assets.change_device %}
+                                <a href="{% url view_edit device.id %}" class="btn btn-primary btn-sm" title="编辑">
+                                    <i class="fas fa-edit"></i> 编辑
+                                </a>
+                                {% endif %}
+                                {% if perms.assets.view_history %}
+                                <a href="{% url view_history device.id %}" class="btn btn-secondary btn-sm" title="历史记录">
+                                    <i class="fas fa-history"></i> 历史
+                                </a>
+                                {% endif %}
+                                {% if perms.assets.delete_device %}
+                                <form method="post" action="{% url view_delete pk=device.pk %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm" 
+                                            onclick="return confirm('确定要删除这个{{ model_name }}吗？')"
+                                            title="删除">
+                                        <i class="fas fa-trash"></i> 删除
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center">暂无数据</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
         {% include "includes/pagination.html" %}
+
+        <!-- 导入模态框 -->
+        <div class="modal" id="importModal" style="display: none;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">导入{{ model_name }}</h5>
+                        <button type="button" class="close" onclick="closeImportModal()">&times;</button>
+                    </div>
+                    <form method="post" enctype="multipart/form-data" action="{% url 'assets:import_data' %}" onsubmit="return validateImport()">
+                        {% csrf_token %}
+                        <input type="hidden" name="model_type" value="{{ model_type }}">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>选择Excel文件：</label>
+                                <input type="file" name="file" accept=".xlsx,.xls" required class="form-control">
+                                <small class="text-muted">请下载<a href="{% url 'assets:download_template' %}?type={{ model_type }}">导入模板</a>填写数据</small>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">导入</button>
+                            <button type="button" class="btn btn-secondary" onclick="closeImportModal()">取消</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 {% endif %}
 {% endblock %}
@@ -308,5 +354,167 @@
         min-width: 40px;
     }
 }
+
+/* 模态框样式 */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-dialog {
+    margin: 60px auto;
+    max-width: 500px;
+    background: white;
+    border-radius: 4px;
+}
+
+.modal-content {
+    padding: 20px;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.modal-footer {
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.close:hover {
+    color: #333;
+}
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 全选/取消全选
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.getElementsByName('selected_items');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+}
+
+// 批量删除
+function batchDelete() {
+    const selectedIds = getSelectedIds();
+    if (selectedIds.length === 0) {
+        alert('请选择要删除的项目');
+        return;
+    }
+    
+    console.log('设备类型:', '{{ model_type }}');
+    
+    if (confirm('确定要删除选中的项目吗？')) {
+        fetch('{% url "assets:batch_delete" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                ids: selectedIds,
+                type: '{{ model_type }}'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || '删除失败');
+            }
+        })
+        .catch(error => {
+            alert('操作失败：' + error);
+        });
+    }
+}
+
+// 批量导出
+function batchExport() {
+    const selectedIds = getSelectedIds();
+    if (selectedIds.length === 0) {
+        alert('请选择要导出的项目');
+        return;
+    }
+    
+    window.location.href = `?export=1&ids=${selectedIds.join(',')}`;
+}
+
+// 获取选中的ID
+function getSelectedIds() {
+    const checkboxes = document.getElementsByName('selected_items');
+    const selectedIds = [];
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            selectedIds.push(checkbox.value);
+        }
+    });
+    return selectedIds;
+}
+
+// 导入相关函数
+function showImportModal() {
+    const modal = document.getElementById('importModal');
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';  // 防止背景滚动
+}
+
+function closeImportModal() {
+    const modal = document.getElementById('importModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+function validateImport() {
+    const fileInput = document.querySelector('input[type="file"]');
+    if (!fileInput.files.length) {
+        alert('请选择要导入的文件');
+        return false;
+    }
+    
+    const fileName = fileInput.files[0].name;
+    const fileExt = fileName.split('.').pop().toLowerCase();
+    if (!['xlsx', 'xls'].includes(fileExt)) {
+        alert('请选择 Excel 文件 (.xlsx 或 .xls)');
+        return false;
+    }
+    
+    return true;
+}
+
+// 点击模态框外部关闭
+window.onclick = function(event) {
+    const modal = document.getElementById('importModal');
+    if (event.target == modal) {
+        closeImportModal();
+    }
+}
+</script>
 {% endblock %} 

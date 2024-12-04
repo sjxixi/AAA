@@ -47,4 +47,8 @@ urlpatterns = [
     path('security/<int:pk>/edit/', SecurityDeviceView.as_view(), name='security_edit'),
     path('security/<int:pk>/delete/', SecurityDeviceView.as_view(), name='security_delete'),
     path('security/<int:pk>/history/', SecurityDeviceView.as_view(), name='security_history'),
+
+    path('batch-delete/', views.batch_delete, name='batch_delete'),
+    path('import/', views.import_data, name='import_data'),
+    path('download-template/', views.download_template, name='download_template'),
 ] 

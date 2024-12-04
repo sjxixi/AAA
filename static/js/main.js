@@ -36,45 +36,38 @@ function getUrlPrefix(itemType) {
 }
 
 // 表格排序功能
-document.addEventListener('DOMContentLoaded', function() {
-    const tables = document.querySelectorAll('.sortable');
-    
-    tables.forEach(table => {
-        const headers = table.querySelectorAll('th');
-        headers.forEach(header => {
-            if (header.dataset.sortable !== 'false') {
-                header.addEventListener('click', () => {
-                    sortTable(table, Array.from(headers).indexOf(header));
-                });
-            }
-        });
-    });
-});
-
 function sortTable(table, column) {
-    const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    const isNumeric = rows.every(row => 
-        !isNaN(row.children[column].textContent.trim())
-    );
-    
-    const direction = table.dataset.sortDirection === 'asc' ? -1 : 1;
-    
+    const rows = Array.from(table.querySelectorAll('tbody tr'));
+    const isNumeric = rows.some(row => !isNaN(row.cells[column].textContent));
+    const direction = table.getAttribute('data-sort') === 'asc' ? -1 : 1;
+
     rows.sort((a, b) => {
-        const aValue = a.children[column].textContent.trim();
-        const bValue = b.children[column].textContent.trim();
+        const aValue = a.cells[column].textContent.trim();
+        const bValue = b.cells[column].textContent.trim();
         
         if (isNumeric) {
             return direction * (parseFloat(aValue) - parseFloat(bValue));
         }
         return direction * aValue.localeCompare(bValue);
     });
-    
-    tbody.innerHTML = '';
-    rows.forEach(row => tbody.appendChild(row));
-    
-    table.dataset.sortDirection = direction === 1 ? 'asc' : 'desc';
+
+    table.setAttribute('data-sort', direction === 1 ? 'asc' : 'desc');
+    rows.forEach(row => table.querySelector('tbody').appendChild(row));
 }
+
+// 添加排序事件监听
+document.addEventListener('DOMContentLoaded', function() {
+    const tables = document.querySelectorAll('table.sortable');
+    tables.forEach(table => {
+        const headers = table.querySelectorAll('th');
+        headers.forEach((header, index) => {
+            if (!header.classList.contains('no-sort')) {
+                header.style.cursor = 'pointer';
+                header.addEventListener('click', () => sortTable(table, index));
+            }
+        });
+    });
+});
 
 // 搜索功能
 function searchTable(inputId, tableId) {
@@ -114,4 +107,24 @@ function validateForm(formId) {
     });
 
     return isValid;
+}
+
+// 导入相关函数
+function showImportModal() {
+    document.getElementById('importModal').style.display = 'block';
+    document.getElementById('importModal').classList.add('show');
+}
+
+function closeImportModal() {
+    document.getElementById('importModal').style.display = 'none';
+    document.getElementById('importModal').classList.remove('show');
+}
+
+function validateImport() {
+    const fileInput = document.querySelector('input[type="file"]');
+    if (!fileInput.files.length) {
+        alert('请选择要导入的文件');
+        return false;
+    }
+    return true;
 } 

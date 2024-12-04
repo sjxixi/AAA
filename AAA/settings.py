@@ -193,3 +193,73 @@ REMEMBER_ME_DURATION = 1209600  # 两周
 # 登录尝试限制
 MAX_LOGIN_ATTEMPTS = 5
 LOGIN_ATTEMPT_TIMEOUT = 300  # 5分钟
+
+# 添加权限组配置
+GROUPS = {
+    'admin': ['view', 'add', 'change', 'delete', 'export'],
+    'operator': ['view', 'change'],
+    'viewer': ['view']
+}
+
+# 添加权限映射
+PERMISSIONS = {
+    'view': '查看',
+    'add': '添加',
+    'change': '修改', 
+    'delete': '删除',
+    'export': '导出'
+}
+
+# 导入导出配置
+IMPORT_EXPORT_USE_TRANSACTIONS = True
+IMPORT_EXPORT_SKIP_ADMIN_LOG = False
+
+# 文件上传配置
+IMPORT_EXPORT_TMP_STORAGE_CLASS = 'import_export.tmp_storages.TempFolderStorage'
+IMPORT_EXPORT_IMPORT_PERMISSION_CODE = 'add'
+IMPORT_EXPORT_EXPORT_PERMISSION_CODE = 'view'
+
+# 导入导出格式
+IMPORT_EXPORT_FORMATS = [
+    'xlsx',
+    'xls',
+    'csv',
+]
+
+# 导入导出字段映射
+IMPORT_EXPORT_FIELD_MAPPINGS = {
+    'status': {
+        'running': '运行中',
+        'stopped': '已停止',
+        'maintenance': '维护中',
+        'fault': '故障'
+    }
+}
+
+# 导入导出错误信息
+IMPORT_EXPORT_ERROR_MESSAGES = {
+    'required': '此字段为必填项',
+    'invalid': '无效的值',
+    'unique': '此值已存在',
+    'foreign_key': '无效的外键值'
+}
+
+# 导入导出日志配置
+IMPORT_EXPORT_LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'import_export.log',
+        },
+    },
+    'loggers': {
+        'import_export': {
+            'handlers': ['file'],
+            'level': 'INFO',
+            'propagate': True
+        },
+    }
+}
