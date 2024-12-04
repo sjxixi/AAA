@@ -9,6 +9,7 @@
         <h2>CMDB资产管理系统</h2>
         <form method="post" class="login-form">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.GET.next }}">
             <div class="form-group">
                 <label for="username">用户名：</label>
                 <input type="text" name="username" id="username" required class="form-control">

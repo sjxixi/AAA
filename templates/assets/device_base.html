@@ -2,82 +2,88 @@
 {% load static %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <h2>{{ model_name }}列表</h2>
-    </div>
-    
-    <div class="search-area">
-        <form method="get" class="search-form">
-            <div class="search-row">
-                {% for field in filter.form %}
-                <div class="search-item">
-                    <label>{{ field.label }}:</label>
-                    {{ field }}
-                </div>
-                {% endfor %}
-            </div>
-            <div class="button-group">
-                <button type="submit" class="btn btn-primary">搜索</button>
-                <button type="button" class="btn btn-secondary" onclick="window.location.href='?'">重置</button>
-                <a href="?export=1" class="btn btn-success">导出Excel</a>
-                <a href="{% url view_create %}" class="btn btn-primary">添加{{ model_name }}</a>
-            </div>
-        </form>
-    </div>
-
-    <table class="table">
-        <thead>
-            <tr>
-                {% block table_headers %}{% endblock %}
-                <th class="col-actions">操作</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for device in page_obj %}
-            <tr>
-                {% block table_cells %}{% endblock %}
-                <td class="col-actions">
-                    <div class="action-buttons">
-                        <a href="{% url view_detail device.id %}" class="btn btn-info btn-sm">查看</a>
-                        <a href="{% url view_edit device.id %}" class="btn btn-primary btn-sm">编辑</a>
-                        <a href="{% url view_history device.id %}" class="btn btn-secondary btn-sm">历史</a>
-                        <form method="post" action="{% url view_delete pk=device.pk %}" style="display: inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-sm" 
-                                    onclick="return confirm('确定要删除这个{{ model_name }}吗？')">
-                                删除
-                            </button>
-                        </form>
+{% if not user.is_authenticated %}
+    <script>
+        window.location.href = "{% url 'login' %}?next={{ request.path }}";
+    </script>
+{% else %}
+    <div class="card">
+        <div class="card-header">
+            <h2>{{ model_name }}列表</h2>
+        </div>
+        
+        <div class="search-area">
+            <form method="get" class="search-form">
+                <div class="search-row">
+                    {% for field in filter.form %}
+                    <div class="search-item">
+                        <label>{{ field.label }}:</label>
+                        {{ field }}
                     </div>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="8" class="text-center">暂无数据</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+                    {% endfor %}
+                </div>
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">搜索</button>
+                    <button type="button" class="btn btn-secondary" onclick="window.location.href='?'">重置</button>
+                    <a href="?export=1" class="btn btn-success">导出Excel</a>
+                    <a href="{% url view_create %}" class="btn btn-primary">添加{{ model_name }}</a>
+                </div>
+            </form>
+        </div>
 
-    {% if page_obj.paginator.num_pages > 1 %}
-    <div class="pagination">
-        {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; 首页</a>
-            <a href="?page={{ page_obj.previous_page_number }}">上一页</a>
-        {% endif %}
+        <table class="table">
+            <thead>
+                <tr>
+                    {% block table_headers %}{% endblock %}
+                    <th class="col-actions">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for device in page_obj %}
+                <tr>
+                    {% block table_cells %}{% endblock %}
+                    <td class="col-actions">
+                        <div class="action-buttons">
+                            <a href="{% url view_detail device.id %}" class="btn btn-info btn-sm">查看</a>
+                            <a href="{% url view_edit device.id %}" class="btn btn-primary btn-sm">编辑</a>
+                            <a href="{% url view_history device.id %}" class="btn btn-secondary btn-sm">历史</a>
+                            <form method="post" action="{% url view_delete pk=device.pk %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm" 
+                                        onclick="return confirm('确定要删除这个{{ model_name }}吗？')">
+                                    删除
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center">暂无数据</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
-        <span class="current">
-            第 {{ page_obj.number }} 页，共 {{ page_obj.paginator.num_pages }} 页
-        </span>
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; 首页</a>
+                <a href="?page={{ page_obj.previous_page_number }}">上一页</a>
+            {% endif %}
 
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">下一页</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">末页 &raquo;</a>
+            <span class="current">
+                第 {{ page_obj.number }} 页，共 {{ page_obj.paginator.num_pages }} 页
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">下一页</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">末页 &raquo;</a>
+            {% endif %}
+        </div>
         {% endif %}
     </div>
-    {% endif %}
-</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_css %}

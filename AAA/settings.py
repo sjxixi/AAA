@@ -89,11 +89,6 @@ DATABASES = {
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
             'charset': 'utf8mb4'
-        },
-        'TEST': {
-            'NAME': 'test_cmdb',
-            'CHARSET': 'utf8mb4',
-            'COLLATION': 'utf8mb4_unicode_ci',
         }
     }
 }
@@ -176,17 +171,6 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # 测试配置
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
-
-# 测试数据库配置
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#         'TEST': {
-#             'NAME': BASE_DIR / 'test_db.sqlite3',
-#         },
-#     }
-# }
 
 # 会话配置
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'

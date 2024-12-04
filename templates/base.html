@@ -12,19 +12,21 @@
     <nav class="navbar">
         <div class="logo">CMDB资产管理系统</div>
         <ul class="nav-links">
-            <li><a href="{% url 'assets:dashboard' %}">首页</a></li>
-            <li><a href="{% url 'assets:datacenter_list' %}">数据中心</a></li>
-            <li><a href="{% url 'assets:server_list' %}">服务器</a></li>
-            <li><a href="{% url 'assets:network_list' %}">网络设备</a></li>
-            <li><a href="{% url 'assets:storage_list' %}">存储设备</a></li>
-            <li><a href="{% url 'assets:security_list' %}">安全设备</a></li>
             {% if user.is_authenticated %}
+                <li><a href="{% url 'assets:dashboard' %}">首页</a></li>
+                <li><a href="{% url 'assets:datacenter_list' %}">数据中心</a></li>
+                <li><a href="{% url 'assets:server_list' %}">服务器</a></li>
+                <li><a href="{% url 'assets:network_list' %}">网络设备</a></li>
+                <li><a href="{% url 'assets:storage_list' %}">存储设备</a></li>
+                <li><a href="{% url 'assets:security_list' %}">安全设备</a></li>
                 <li>
                     <form method="post" action="{% url 'logout' %}" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" class="logout-btn">退出</button>
                     </form>
                 </li>
+            {% else %}
+                <li><a href="{% url 'login' %}">登录</a></li>
             {% endif %}
         </ul>
     </nav>
