@@ -49,6 +49,46 @@
             </div>
         </div>
 
+        <!-- 设备统计 -->
+        <div class="device-stats">
+            <div class="stat-card">
+                <div class="stat-icon server-icon">
+                    <i class="fas fa-server"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">服务器</div>
+                    <div class="stat-value">{{ datacenter.server_set.count }}</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon network-icon">
+                    <i class="fas fa-network-wired"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">网络设备</div>
+                    <div class="stat-value">{{ datacenter.networkdevice_set.count }}</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon storage-icon">
+                    <i class="fas fa-hdd"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">存储设备</div>
+                    <div class="stat-value">{{ datacenter.storagedevice_set.count }}</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon security-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-label">安全设备</div>
+                    <div class="stat-value">{{ datacenter.securitydevice_set.count }}</div>
+                </div>
+            </div>
+        </div>
+
         <!-- 相关设备 -->
         <div class="detail-section">
             <h3>相关设备</h3>
@@ -190,6 +230,75 @@
     background-color: #f8f9fa;
 }
 
+/* 操作按钮组样式 */
+.action-buttons {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-start;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.btn-sm {
+    height: 28px;
+    padding: 0 8px;
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    min-width: 40px;
+    transition: all 0.2s;
+}
+
+.btn-sm i {
+    margin-right: 3px;
+    font-size: 12px;
+}
+
+/* 查看按钮 */
+.btn-info {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+}
+
+/* 编辑按钮 */
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+/* 历史按钮 */
+.btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #7f8c8d;
+}
+
+/* 删除按钮 */
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
 /* 响应式布局 */
 @media (max-width: 768px) {
     .detail-grid {
@@ -204,6 +313,100 @@
         flex: 1 1 auto;
         text-align: center;
         margin-bottom: 0.5rem;
+    }
+
+    .action-buttons {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    
+    .btn-sm {
+        flex: 1;
+        min-width: 70px;
+    }
+}
+
+/* 设备统计卡片样式 */
+.device-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin: 2rem 0;
+    padding: 0 1.5rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+}
+
+.stat-icon i {
+    font-size: 24px;
+    color: white;
+}
+
+.server-icon {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+}
+
+.network-icon {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.storage-icon {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.security-icon {
+    background: linear-gradient(135deg, #f1c40f, #f39c12);
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* 响应式布局 */
+@media (max-width: 992px) {
+    .device-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .device-stats {
+        grid-template-columns: 1fr;
     }
 }
 </style>
@@ -226,7 +429,43 @@ function showTab(tabId) {
     document.getElementById(tabId).classList.add('active');
     
     // 激活对应的标签按钮
-    event.target.classList.add('active');
+    document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+}
+
+function confirmDelete(deviceType, deviceId) {
+    if (confirm(`确定要删除这个${deviceType}吗？`)) {
+        // 根据设备类型构建URL
+        const urlMap = {
+            '服务器': 'server',
+            '网络设备': 'network',
+            '存储设备': 'storage',
+            '安全设备': 'security'
+        };
+        
+        const deviceUrlPrefix = urlMap[deviceType];
+        if (!deviceUrlPrefix) return;
+        
+        // 发送删除请求
+        fetch(`/assets/${deviceUrlPrefix}/${deviceId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // 刷新页面
+                window.location.reload();
+            } else {
+                alert('删除失败');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作失败，请重试');
+        });
+    }
 }
 </script>
 {% endblock %} 

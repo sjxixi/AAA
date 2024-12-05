@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block content %}
+{% csrf_token %}
 {% if not user.is_authenticated %}
     <script>
         window.location.href = "{% url 'login' %}?next={{ request.path }}";
@@ -415,9 +416,36 @@
 function toggleSelectAll() {
     const selectAll = document.getElementById('selectAll');
     const checkboxes = document.getElementsByName('selected_items');
+    
     checkboxes.forEach(checkbox => {
         checkbox.checked = selectAll.checked;
     });
+}
+
+// 更新全选框状态
+function updateSelectAllState() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.getElementsByName('selected_items');
+    const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+    
+    if (checkedCount === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+    } else if (checkedCount === checkboxes.length) {
+        selectAll.checked = true;
+        selectAll.indeterminate = false;
+    } else {
+        selectAll.checked = false;
+        selectAll.indeterminate = true;
+    }
+}
+
+// 获取选中的ID列表
+function getSelectedIds() {
+    const checkboxes = document.getElementsByName('selected_items');
+    return Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
 }
 
 // 批量删除
@@ -427,8 +455,6 @@ function batchDelete() {
         alert('请选择要删除的项目');
         return;
     }
-    
-    console.log('设备类型:', '{{ model_type }}');
     
     if (confirm('确定要删除选中的项目吗？')) {
         fetch('{% url "assets:batch_delete" %}', {
@@ -451,10 +477,19 @@ function batchDelete() {
             }
         })
         .catch(error => {
-            alert('操作失败：' + error);
+            console.error('Error:', error);
+            alert('操作失败，请重试');
         });
     }
 }
+
+// 为所有复选框添加change事件监听器
+document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.getElementsByName('selected_items');
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectAllState);
+    });
+});
 
 // 批量导出
 function batchExport() {
@@ -465,18 +500,6 @@ function batchExport() {
     }
     
     window.location.href = `?export=1&ids=${selectedIds.join(',')}`;
-}
-
-// 获取选中的ID
-function getSelectedIds() {
-    const checkboxes = document.getElementsByName('selected_items');
-    const selectedIds = [];
-    checkboxes.forEach(checkbox => {
-        if (checkbox.checked) {
-            selectedIds.push(checkbox.value);
-        }
-    });
-    return selectedIds;
 }
 
 // 导入相关函数

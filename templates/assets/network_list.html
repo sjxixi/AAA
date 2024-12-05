@@ -19,24 +19,93 @@
 {% endblock %}
 
 {% block extra_js %}
+{{ block.super }}
 <script>
-// 添加设备类型映射
-const deviceTypes = {
-    'NetworkDevice': '网络设备',
-    'Server': '服务器',
-    'StorageDevice': '存储设备',
-    'SecurityDevice': '安全设备'
-};
+document.addEventListener('DOMContentLoaded', function() {
+    // 初始化复选框状态
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.getElementsByName('selected_items');
+    
+    if (selectAll && checkboxes.length > 0) {
+        // 添加全选事件监听
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+        });
 
-// 获取当前设备类型
-const currentDeviceType = deviceTypes['{{ model_name }}'];
-
-// 修改删除按钮的点击事件
-document.querySelectorAll('.btn-danger').forEach(btn => {
-    btn.onclick = function() {
-        const deviceId = this.dataset.id;
-        confirmDelete(currentDeviceType, deviceId);
-    };
+        // 添加单个复选框事件监听
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+                
+                if (checkedCount === 0) {
+                    selectAll.checked = false;
+                    selectAll.indeterminate = false;
+                } else if (checkedCount === checkboxes.length) {
+                    selectAll.checked = true;
+                    selectAll.indeterminate = false;
+                } else {
+                    selectAll.checked = false;
+                    selectAll.indeterminate = true;
+                }
+            });
+        });
+    }
 });
+
+// 批量删除函数
+function batchDelete() {
+    const checkboxes = document.getElementsByName('selected_items');
+    const selectedIds = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+
+    if (selectedIds.length === 0) {
+        alert('请选择要删除的项目');
+        return;
+    }
+
+    if (confirm('确定要删除选中的项目吗？')) {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        fetch('{% url "assets:batch_delete" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                ids: selectedIds,
+                type: '{{ model_type }}'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || '删除失败');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('操作失败，请重试');
+        });
+    }
+}
+
+// 批量导出函数
+function batchExport() {
+    const checkboxes = document.getElementsByName('selected_items');
+    const selectedIds = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+
+    if (selectedIds.length === 0) {
+        window.location.href = '?export=1';  // 导出全部
+    } else {
+        window.location.href = '?export=1&ids=' + selectedIds.join(',');  // 导出选中项
+    }
+}
 </script>
 {% endblock %} 
