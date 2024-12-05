@@ -71,7 +71,7 @@
 
 1. 克隆项目
 ```bash
-git clone [项目地址]
+git clone [https://github.com/sjxixi/AAA.git]
 cd cmdb
 ```
 
@@ -127,7 +127,7 @@ python manage.py runserver
    - 选择设备批量导出
    - 批量删除设备
 
-### 权限���明
+### 权限说明
 
 - 超级管理员：具有所有操作权限
 - 普通用户：
@@ -184,7 +184,7 @@ python manage.py test
 - 检查日志文件
 - 验证数据库连接
 - 确认权限设置
-- 检查网络状���
+- 检查网络状况
 
 ## 版本历史
 
@@ -209,4 +209,4 @@ MIT License
 
 - 作者：sjxixi
 - 邮箱：sjcache@gmail.com
-- 项目地址：[项目地址] 
+- 项目地址：[https://github.com/sjxixi/AAA.git] 
