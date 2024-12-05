@@ -127,4 +127,23 @@ function validateImport() {
         return false;
     }
     return true;
-} 
+}
+
+// 导航栏收缩控制
+document.addEventListener('DOMContentLoaded', function() {
+    // 获取导航栏和切换按钮
+    const navbar = document.querySelector('.navbar');
+    const navToggle = document.getElementById('navToggle');
+
+    // 检查元素是否存在
+    if (!navbar || !navToggle) {
+        console.error('Navigation elements not found');
+        return;
+    }
+
+    // 点击事件处理
+    navToggle.onclick = function() {
+        navbar.classList.toggle('collapsed');
+        console.log('Navbar clicked, collapsed:', navbar.classList.contains('collapsed'));
+    };
+}); 

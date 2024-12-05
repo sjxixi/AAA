@@ -1,0 +1,15 @@
+<form method="post" class="edit-form">
+    {% csrf_token %}
+    <!-- 表单字段... -->
+    
+    <div class="form-actions">
+        <button type="submit" class="btn-action btn-save">
+            <i class="fas fa-save"></i>
+            保存
+        </button>
+        <a href="{{ cancel_url }}" class="btn-action btn-cancel">
+            <i class="fas fa-times"></i>
+            取消
+        </a>
+    </div>
+</form> 

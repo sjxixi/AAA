@@ -11,26 +11,27 @@ from ..forms import DataCenterForm
 from ..filters import DataCenterFilter
 from ..resources import DataCenterResource
 from ..resources.devices import (
-    ServerResource, NetworkDeviceResource, 
+    ServerResource, NetworkDeviceResource,
     StorageDeviceResource, SecurityDeviceResource
 )
 from tablib import Dataset
 import datetime
 import json
 
+
 @login_required
 def dashboard(request):
     """仪表盘视图"""
     # 获取所有数据中心
     datacenters = DataCenter.objects.all()
-    
+
     # 为每个数据中心添加设备统计
     for dc in datacenters:
         dc.server_count = dc.server_set.count()
         dc.network_count = dc.networkdevice_set.count()
         dc.storage_count = dc.storagedevice_set.count()
         dc.security_count = dc.securitydevice_set.count()
-    
+
     context = {
         'datacenter_count': DataCenter.objects.count(),
         'server_count': Server.objects.count(),
@@ -41,11 +42,12 @@ def dashboard(request):
     }
     return render(request, 'assets/dashboard.html', context)
 
+
 @login_required
 def datacenter_list(request):
     """数据中心列表视图"""
     filter = DataCenterFilter(request.GET, queryset=DataCenter.objects.all())
-    
+
     # 处理导出请求
     if 'export' in request.GET:
         resource = DataCenterResource()
@@ -58,7 +60,7 @@ def datacenter_list(request):
         else:
             # 否则导出过滤后的所有数据
             queryset = filter.qs
-            
+
         dataset = resource.export(queryset)
         response = HttpResponse(
             dataset.export('xlsx'),
@@ -66,18 +68,20 @@ def datacenter_list(request):
         )
         response['Content-Disposition'] = f'attachment; filename="datacenters_{datetime.date.today()}.xlsx"'
         return response
-    
+
     context = {
         'filter': filter,
         'datacenters': filter.qs
     }
     return render(request, 'assets/datacenter_list.html', context)
 
+
 @login_required
 def datacenter_detail(request, pk):
     """数据中心详情视图"""
     datacenter = get_object_or_404(DataCenter, pk=pk)
     return render(request, 'assets/datacenter_detail.html', {'datacenter': datacenter})
+
 
 @login_required
 def datacenter_create(request):
@@ -92,6 +96,7 @@ def datacenter_create(request):
         form = DataCenterForm()
     return render(request, 'assets/datacenter_form.html', {'form': form, 'title': '创建数据中心'})
 
+
 @login_required
 def datacenter_edit(request, pk):
     """编辑数据中心视图"""
@@ -104,8 +109,9 @@ def datacenter_edit(request, pk):
             return redirect('assets:datacenter_detail', pk=datacenter.pk)
     else:
         form = DataCenterForm(instance=datacenter)
-    return render(request, 'assets/datacenter_form.html', 
-                 {'form': form, 'datacenter': datacenter, 'title': '编辑数据中心'})
+    return render(request, 'assets/datacenter_form.html',
+                  {'form': form, 'datacenter': datacenter, 'title': '编辑数据中心'})
+
 
 @login_required
 def datacenter_delete(request, pk):
@@ -119,17 +125,18 @@ def datacenter_delete(request, pk):
             messages.error(request, f'删除失败：{str(e)}')
     return redirect('assets:datacenter_list')
 
+
 @login_required
 def datacenter_history(request, pk):
     """数据中心史记录视图"""
     datacenter = get_object_or_404(DataCenter, pk=pk)
     history = datacenter.history.all().order_by('-history_date')
-    
+
     # 处理历史记录
     history_list = list(history)
-    for i in range(len(history_list)-1):
+    for i in range(len(history_list) - 1):
         current = history_list[i]
-        previous = history_list[i+1]
+        previous = history_list[i + 1]
         delta = current.diff_against(previous)
         current.changes = []
         for change in delta.changes:
@@ -143,11 +150,12 @@ def datacenter_history(request, pk):
                 'old': change.old,
                 'new': change.new
             })
-    
+
     return render(request, 'assets/datacenter_history.html', {
         'datacenter': datacenter,
         'history': history_list
     })
+
 
 # 导入相关视图
 @login_required
@@ -163,12 +171,12 @@ def import_data(request):
                 'SecurityDevice': SecurityDevice,
                 'DataCenter': DataCenter
             }
-            
+
             model = model_map.get(model_type)
             if not model:
                 messages.error(request, '无效的设备类型')
                 return redirect(request.META.get('HTTP_REFERER', '/'))
-            
+
             # 获取对应的Resource类
             resource_map = {
                 'Server': ServerResource,
@@ -177,21 +185,21 @@ def import_data(request):
                 'SecurityDevice': SecurityDeviceResource,
                 'DataCenter': DataCenterResource
             }
-            
+
             resource_class = resource_map.get(model_type)
             if not resource_class:
                 messages.error(request, '无效的资源类型')
                 return redirect(request.META.get('HTTP_REFERER', '/'))
-            
+
             # 读取文件内容
             file_content = request.FILES['file'].read()
             if not file_content:
                 messages.error(request, '文件内容为空')
                 return redirect(request.META.get('HTTP_REFERER', '/'))
-            
+
             resource = resource_class()
             dataset = Dataset()
-            
+
             # 尝试加载不同格式
             try:
                 imported_data = dataset.load(file_content, format='xlsx')
@@ -201,17 +209,20 @@ def import_data(request):
                 except Exception as e:
                     messages.error(request, f'不支持的文件格式: {str(e)}')
                     return redirect(request.META.get('HTTP_REFERER', '/'))
-            
+
             if len(dataset) == 0:
                 messages.error(request, '文件中没有数据')
                 return redirect(request.META.get('HTTP_REFERER', '/'))
-            
+
             # 必填字段定义
             required_fields = {
                 'Server': ['name', 'sn', 'manufacturer', 'data_center', 'ip_address', 'mac_address', 'hostname'],
-                'NetworkDevice': ['name', 'sn', 'manufacturer', 'data_center', 'ip_address', 'mac_address', 'device_type'],
-                'StorageDevice': ['name', 'sn', 'manufacturer', 'data_center', 'ip_address', 'mac_address', 'storage_type'],
-                'SecurityDevice': ['name', 'sn', 'manufacturer', 'data_center', 'ip_address', 'mac_address', 'security_type'],
+                'NetworkDevice': ['name', 'sn', 'manufacturer', 'data_center', 'ip_address', 'mac_address',
+                                  'device_type'],
+                'StorageDevice': ['name', 'sn', 'manufacturer', 'data_center', 'ip_address', 'mac_address',
+                                  'storage_type'],
+                'SecurityDevice': ['name', 'sn', 'manufacturer', 'data_center', 'ip_address', 'mac_address',
+                                   'security_type'],
                 'DataCenter': ['name', 'location', 'contact', 'phone']
             }
 
@@ -231,10 +242,10 @@ def import_data(request):
             if missing_fields:
                 messages.error(request, f'缺少必填字段: {", ".join(missing_fields)}')
                 return redirect(request.META.get('HTTP_REFERER', '/'))
-            
+
             # 先进行测试导入
             result = resource.import_data(dataset, dry_run=True)
-            
+
             if not result.has_errors():
                 # 如果测试通过，执行实际导入
                 result = resource.import_data(dataset, dry_run=False)
@@ -242,38 +253,39 @@ def import_data(request):
             else:
                 # 收集所有错误信息
                 error_messages = []
-                
+
                 # 处理行级错误
                 if hasattr(result, 'row_errors'):
                     for row_number, errors in result.row_errors():
                         for error in errors:
                             error_messages.append(f'第 {row_number} 行: {error.error}')
-                
+
                 # 处理验证错误
                 if hasattr(result, 'validation_errors'):
                     for error in result.validation_errors:
                         error_messages.append(str(error))
-                
+
                 # 处理无效行
                 if hasattr(result, 'invalid_rows'):
                     for row in result.invalid_rows:
                         for error in row.errors:
                             error_messages.append(f'第 {row.number} 行: {error.error}')
-                
+
                 if error_messages:
                     messages.error(request, '导入失败:\n' + '\n'.join(error_messages))
                 else:
                     messages.error(request, '导入失败，请检查以下问题：\n'
-                                         '1. 必填字段是否都已填写\n'
-                                         '2. 字段格式是否正确\n'
-                                         '3. 唯一字段是否重复\n'
-                                         '4. 日期格式是否为YYYY-MM-DD\n'
-                                         '5. 数据中心名称是否存在')
-                
+                                            '1. 必填字段是否都已填写\n'
+                                            '2. 字段格式是否正确\n'
+                                            '3. 唯一字段是否重复\n'
+                                            '4. 日期格式是否为YYYY-MM-DD\n'
+                                            '5. 数据中心名称是否存在')
+
         except Exception as e:
             messages.error(request, f'导入失败: {str(e)}')
-            
+
     return redirect(request.META.get('HTTP_REFERER', '/'))
+
 
 @login_required
 def download_template(request):
@@ -285,11 +297,11 @@ def download_template(request):
         'SecurityDevice': SecurityDevice,
         'DataCenter': DataCenter
     }
-    
+
     model = model_map.get(model_type)
     if not model:
         return HttpResponse('无效的设备类型', status=400)
-    
+
     # 获取对应的Resource类
     resource_map = {
         'Server': ServerResource,
@@ -298,7 +310,7 @@ def download_template(request):
         'SecurityDevice': SecurityDeviceResource,
         'DataCenter': DataCenterResource
     }
-    
+
     # 示例数据
     example_data = {
         'Server': {
@@ -390,14 +402,14 @@ def download_template(request):
             'description': '这是一个示例数据中心'
         }
     }
-    
+
     resource_class = resource_map.get(model_type)
     if not resource_class:
         return HttpResponse('无效的资源类型', status=400)
-        
+
     resource = resource_class()
     dataset = Dataset()
-    
+
     # 获取表头和字段映射
     headers = []
     fields = []
@@ -408,9 +420,9 @@ def download_template(request):
         else:
             headers.append(field.attribute)
             fields.append(field.attribute)
-    
+
     dataset.headers = headers
-    
+
     # 添加示例数据
     example = example_data.get(model_type, {})
     if example:
@@ -419,16 +431,17 @@ def download_template(request):
         for field in fields:
             row.append(example.get(field, ''))
         dataset.append(row)
-        
+
         # 添加一个空行，用于用户填写
         dataset.append([''] * len(headers))
-    
+
     response = HttpResponse(
         dataset.export('xlsx'),
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = f'attachment; filename="{model._meta.verbose_name}_template.xlsx"'
     return response
+
 
 @require_POST
 @permission_required('assets.delete_device')
@@ -437,7 +450,7 @@ def batch_delete(request):
         data = json.loads(request.body)
         ids = data.get('ids', [])
         device_type = data.get('type', '')  # 添加设备类型参数
-        
+
         # 根据设备类型选择模型
         model_map = {
             'Server': Server,
@@ -446,14 +459,14 @@ def batch_delete(request):
             'SecurityDevice': SecurityDevice,
             'DataCenter': DataCenter
         }
-        
+
         model = model_map.get(device_type)
         if not model:
             return JsonResponse({
-                'success': False, 
+                'success': False,
                 'message': f'无效的设备类型: {device_type}，可用类型: {list(model_map.keys())}'
             })
-        
+
         # 记录操作日志
         for item_id in ids:
             item = get_object_or_404(model, id=item_id)
@@ -465,16 +478,16 @@ def batch_delete(request):
                 action_flag=DELETION,
                 change_message=f'批量删除操作'
             )
-        
+
         # 执行删除
         deleted_count = model.objects.filter(id__in=ids).delete()[0]
-        
+
         return JsonResponse({
             'success': True,
             'message': f'成功删除 {deleted_count} 项'
         })
     except Exception as e:
         return JsonResponse({
-            'success': False, 
+            'success': False,
             'message': f'删除失败: {str(e)}'
         })
