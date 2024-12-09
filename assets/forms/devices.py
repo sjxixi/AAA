@@ -12,14 +12,26 @@ class BaseDeviceForm(forms.ModelForm):
             'manufacturer': forms.TextInput(attrs={'class': 'form-control'}),
             'purchase_date': forms.DateInput(
                 attrs={
-                    'class': 'form-control',
-                    'type': 'date',
+                    'class': 'form-control date-picker',
+                    'type': 'text',
+                    'placeholder': '选择采购日期',
+                    'autocomplete': 'off'
                 }
             ),
             'warranty_date': forms.DateInput(
                 attrs={
-                    'class': 'form-control',
-                    'type': 'date',
+                    'class': 'form-control date-picker',
+                    'type': 'text',
+                    'placeholder': '选择保修到期日期',
+                    'autocomplete': 'off'
+                }
+            ),
+            'created_time': forms.DateTimeInput(
+                attrs={
+                    'class': 'form-control date-picker',
+                    'type': 'text',
+                    'placeholder': '选择创建时间',
+                    'autocomplete': 'off'
                 }
             ),
             'status': forms.Select(attrs={'class': 'form-control'}),
@@ -27,7 +39,11 @@ class BaseDeviceForm(forms.ModelForm):
             'rack_position': forms.TextInput(attrs={'class': 'form-control'}),
             'ip_address': forms.TextInput(attrs={'class': 'form-control'}),
             'mac_address': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'style': 'resize: vertical;'
+            }),
         }
 
     def __init__(self, *args, **kwargs):

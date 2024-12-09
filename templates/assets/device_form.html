@@ -6,12 +6,176 @@
 {% block extra_css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
-    .form-group {
-        margin-bottom: 1rem;
+    .card {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
     }
+    
+    .card-header {
+        background: linear-gradient(to right, #1a2236, #2c3e50);
+        color: white;
+        padding: 1rem 1.5rem;
+    }
+    
+    .card-header h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 500;
+    }
+    
+    .card-body {
+        padding: 2rem;
+        background-color: #fff;
+    }
+    
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .form-section-title {
+        color: #2c3e50;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .form-section-title i {
+        margin-right: 0.5rem;
+        color: #3498db;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
     .form-label {
         font-weight: 500;
         margin-bottom: 0.5rem;
+        color: #34495e;
+        font-size: 0.95rem;
+    }
+    
+    .form-control {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 0.5rem 0.75rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        border-color: #3498db;
+        box-shadow: 0 0 0 0.2rem rgba(52,152,219,0.25);
+    }
+    
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .form-actions {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #eee;
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 1.5rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+        background-color: #3498db;
+        border-color: #3498db;
+    }
+    
+    .btn-primary:hover {
+        background-color: #2980b9;
+        border-color: #2980b9;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background-color: #95a5a6;
+        border-color: #95a5a6;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #7f8c8d;
+        border-color: #7f8c8d;
+        transform: translateY(-1px);
+    }
+    
+    .alert-danger {
+        background-color: #fff5f5;
+        color: #e74c3c;
+        border-color: #ffd7d7;
+        padding: 0.5rem 0.75rem;
+        margin-top: 0.5rem;
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+    
+    /* 日期选择器样式 */
+    .date-picker {
+        background-color: #fff !important;
+        cursor: pointer;
+    }
+    
+    .flatpickr-calendar {
+        background-color: #fff;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border: none;
+        border-radius: 8px;
+    }
+    
+    .flatpickr-day {
+        border-radius: 4px;
+    }
+    
+    .flatpickr-day.selected {
+        background-color: #3498db;
+        border-color: #3498db;
+    }
+    
+    .flatpickr-day:hover {
+        background-color: #f0f4f8;
+    }
+    
+    .flatpickr-current-month {
+        color: #2c3e50;
+        font-weight: 500;
+    }
+    
+    .flatpickr-weekday {
+        color: #7f8c8d;
+        font-weight: 500;
+    }
+    
+    .flatpickr-months .flatpickr-month {
+        background-color: #f8f9fa;
+        color: #2c3e50;
+    }
+    
+    .flatpickr-months .flatpickr-prev-month,
+    .flatpickr-months .flatpickr-next-month {
+        color: #95a5a6;
+    }
+    
+    .flatpickr-months .flatpickr-prev-month:hover,
+    .flatpickr-months .flatpickr-next-month:hover {
+        color: #3498db;
     }
 </style>
 {% endblock %}
@@ -24,24 +188,123 @@
     <div class="card-body">
         <form method="post">
             {% csrf_token %}
-            {% for field in form %}
-            <div class="form-group">
-                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}：</label>
-                {{ field }}
-                {% if field.errors %}
-                <div class="alert alert-danger mt-1">
-                    {{ field.errors.0 }}
-                </div>
-                {% endif %}
-            </div>
-            {% endfor %}
             
-            <div class="form-actions mt-4">
+            <!-- 基本信息 -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-info-circle"></i>基本信息
+                </div>
+                <div class="form-row">
+                    {% for field in form %}
+                        {% if field.name in 'name,status,data_center' %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}：</label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="alert alert-danger">
+                                {{ field.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- 硬件信息 -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-microchip"></i>硬件信息
+                </div>
+                <div class="form-row">
+                    {% for field in form %}
+                        {% if field.name in 'manufacturer,model,sn,rack_position' %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}：</label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="alert alert-danger">
+                                {{ field.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- 系统信息 -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-cogs"></i>系统信息
+                </div>
+                <div class="form-row">
+                    {% for field in form %}
+                        {% if field.name in 'os_type,os_version,ip_address,mac_address' %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}：</label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="alert alert-danger">
+                                {{ field.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- 配置信息 -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-sliders-h"></i>配置信息
+                </div>
+                <div class="form-row">
+                    {% for field in form %}
+                        {% if field.name not in 'name,status,data_center,manufacturer,model,sn,rack_position,os_type,os_version,ip_address,mac_address,description,purchase_date,warranty_date' %}
+                        <div class="form-group">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}：</label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="alert alert-danger">
+                                {{ field.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- 其他信息 -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-calendar-alt"></i>其他信息
+                </div>
+                <div class="form-row">
+                    {% for field in form %}
+                        {% if field.name in 'purchase_date,warranty_date,description' %}
+                        <div class="form-group {% if field.name == 'description' %}col-span-full{% endif %}">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}：</label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="alert alert-danger">
+                                {{ field.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="form-actions">
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-save"></i> 保存
+                    <i class="fas fa-save"></i>保存
                 </button>
-                <a href="{% url 'assets:security_list' %}" class="btn btn-secondary">
-                    <i class="fas fa-times"></i> 取消
+                <a href="{% url 'assets:'|add:model_type|lower|add:'_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i>取消
                 </a>
             </div>
         </form>
@@ -53,17 +316,25 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
 <script>
-    // 初始化日期选择器
-    flatpickr("input[name='purchase_date']", {
+    // 配置日期选择器
+    const dateConfig = {
         locale: "zh",
         dateFormat: "Y-m-d",
-        allowInput: true
-    });
+        allowInput: true,
+        disableMobile: true,  // 在移动设备上也使用自定义样式
+        animate: true,  // 启用动画
+        position: "auto",  // 自动定位
+    };
     
-    flatpickr("input[name='warranty_date']", {
-        locale: "zh",
-        dateFormat: "Y-m-d",
-        allowInput: true
+    // 初始化所有日期选择器
+    flatpickr(".date-picker", dateConfig);
+    
+    // 为日期时间字段添加特殊配置
+    flatpickr("input[name='created_time']", {
+        ...dateConfig,
+        enableTime: true,  // 启用时间选择
+        dateFormat: "Y-m-d H:i",  // 包含时间的格式
+        time_24hr: true,  // 使用24小时制
     });
 </script>
 {% endblock %} 

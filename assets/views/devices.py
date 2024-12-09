@@ -155,7 +155,7 @@ class BaseDeviceView(LoginRequiredMixin, View):
         return render(request, self.template_name_list, context)
 
     def detail_view(self, request, pk):
-        """详情视图"""
+        """详���视图"""
         device = get_object_or_404(self.get_queryset(), pk=pk)
         return render(request, self.template_name_detail, {'device': device})
 
@@ -179,7 +179,7 @@ class BaseDeviceView(LoginRequiredMixin, View):
                 return redirect(f'assets:{self.get_url_prefix()}_detail', pk=device.pk)
         else:
             form = self.form_class()
-            # 限制数据中心选��
+            # 限制数据中心选择
             if not request.user.is_admin:
                 form.fields['data_center'].queryset = request.user.data_centers.all()
 
@@ -231,7 +231,8 @@ class BaseDeviceView(LoginRequiredMixin, View):
             'form': form,
             'device': device,
             'title': f'编辑{self.model._meta.verbose_name}',
-            'can_edit': True
+            'can_edit': True,
+            'model_type': self.get_url_prefix()
         }
         print(f"渲染模板: {self.template_name_form}")
         return render(request, self.template_name_form, context)
@@ -602,24 +603,27 @@ def server_create(request):
     if request.method == 'POST':
         form = ServerForm(request.POST)
         if form.is_valid():
-            # 检查用户是否有权操作选择的数据中心
             data_center = form.cleaned_data.get('data_center')
             if not request.user.is_admin and not request.user.data_centers.filter(id=data_center.id).exists():
                 messages.error(request, '您没有权限在该数据中心创建设备')
-                return render(request, 'assets/device_form.html', {'form': form})
+                return render(request, 'assets/device_form.html', {
+                    'form': form,
+                    'title': '添加服务器',
+                    'model_type': 'server'
+                })
 
             device = form.save()
             messages.success(request, f'服务器 {device.name} 创建成功')
             return redirect('assets:server_list')
     else:
         form = ServerForm()
-        # 限制数据中心选择
         if not request.user.is_admin:
             form.fields['data_center'].queryset = request.user.data_centers.all()
 
     return render(request, 'assets/device_form.html', {
         'form': form,
-        'title': '添加服务器'
+        'title': '添加服务器',
+        'model_type': 'server'
     })
 
 def network_create(request):
@@ -630,7 +634,11 @@ def network_create(request):
             data_center = form.cleaned_data.get('data_center')
             if not request.user.is_admin and not request.user.data_centers.filter(id=data_center.id).exists():
                 messages.error(request, '您没有权限在该数据中心创建设备')
-                return render(request, 'assets/device_form.html', {'form': form})
+                return render(request, 'assets/device_form.html', {
+                    'form': form,
+                    'title': '添加网络设备',
+                    'model_type': 'network'
+                })
 
             device = form.save()
             messages.success(request, f'网络设备 {device.name} 创建成功')
@@ -642,7 +650,8 @@ def network_create(request):
 
     return render(request, 'assets/device_form.html', {
         'form': form,
-        'title': '添加网络设备'
+        'title': '添加网络设备',
+        'model_type': 'network'
     })
 
 def storage_create(request):
@@ -653,7 +662,11 @@ def storage_create(request):
             data_center = form.cleaned_data.get('data_center')
             if not request.user.is_admin and not request.user.data_centers.filter(id=data_center.id).exists():
                 messages.error(request, '您没有权限在该数据中心创建设备')
-                return render(request, 'assets/device_form.html', {'form': form})
+                return render(request, 'assets/device_form.html', {
+                    'form': form,
+                    'title': '添加存储设备',
+                    'model_type': 'storage'
+                })
 
             device = form.save()
             messages.success(request, f'存储设备 {device.name} 创建成功')
@@ -665,7 +678,8 @@ def storage_create(request):
 
     return render(request, 'assets/device_form.html', {
         'form': form,
-        'title': '添加存储设备'
+        'title': '添加存储设备',
+        'model_type': 'storage'
     })
 
 def security_create(request):
@@ -676,7 +690,11 @@ def security_create(request):
             data_center = form.cleaned_data.get('data_center')
             if not request.user.is_admin and not request.user.data_centers.filter(id=data_center.id).exists():
                 messages.error(request, '您没有权限在该数据中心创建设备')
-                return render(request, 'assets/device_form.html', {'form': form})
+                return render(request, 'assets/device_form.html', {
+                    'form': form,
+                    'title': '添加安全设备',
+                    'model_type': 'security'
+                })
 
             device = form.save()
             messages.success(request, f'安全设备 {device.name} 创建成功')
@@ -688,7 +706,8 @@ def security_create(request):
 
     return render(request, 'assets/device_form.html', {
         'form': form,
-        'title': '添加安全设备'
+        'title': '添加安全设备',
+        'model_type': 'security'
     })
 
 # 更新 __all__ 列表，添加新的视图函数

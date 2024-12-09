@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} - CMDB资产管理系统{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>{{ title }}</h2>
+    </div>
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}：</label>
+                {{ field }}
+                {% if field.errors %}
+                <div class="alert alert-danger mt-1">
+                    {{ field.errors.0 }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+            
+            <div class="form-actions mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> 保存
+                </button>
+                <a href="{% url 'assets:server_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> 取消
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+<script>
+    // 初始化日期选择器
+    flatpickr("input[name='purchase_date']", {
+        locale: "zh",
+        dateFormat: "Y-m-d",
+        allowInput: true
+    });
+    
+    flatpickr("input[name='warranty_expire']", {
+        locale: "zh",
+        dateFormat: "Y-m-d",
+        allowInput: true
+    });
+</script>
+{% endblock %} 
