@@ -9,13 +9,22 @@ from assets.models import DataCenter
 class UserCreateForm(forms.ModelForm):
     """用户创建表单"""
     password1 = forms.CharField(
-        label='密码',
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='密码 *',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': '请输入密码',
+            'autocomplete': 'new-password',
+        }),
+        min_length=8,  # 设置最小长度
         help_text='密码长度至少8位，且不能太简单'
     )
     password2 = forms.CharField(
-        label='确认密码',
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        label='确认密码 *',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': '请再次输入密码',
+            'autocomplete': 'new-password',
+        }),
         help_text='请再次输入密码进行确认'
     )
 
@@ -24,18 +33,52 @@ class UserCreateForm(forms.ModelForm):
         fields = ('username', 'email', 'phone', 'department', 'position', 
                  'user_type', 'data_centers', 'is_active')
         widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'department': forms.TextInput(attrs={'class': 'form-control'}),
-            'position': forms.TextInput(attrs={'class': 'form-control'}),
-            'user_type': forms.Select(attrs={'class': 'form-control'}),
-            'data_centers': forms.SelectMultiple(attrs={'class': 'form-control'}),
+            'username': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '请输入用户名',
+                'autocomplete': 'off',
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': '请输入邮箱'
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '请输入手机号'
+            }),
+            'department': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '请输入部门'
+            }),
+            'position': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '请输入职位'
+            }),
+            'user_type': forms.Select(attrs={
+                'class': 'form-control'
+            }),
+            'data_centers': forms.SelectMultiple(attrs={
+                'class': 'form-control'
+            }),
+            'is_active': forms.CheckboxInput(attrs={
+                'class': 'form-check-input'
+            })
         }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
+        
+        # 移除所有字段的默认值
+        for field in self.fields.values():
+            field.initial = None
+            
+        # 只保留 is_active 的默认值为 True
+        self.fields['is_active'].initial = True
+        
+        # 添加必填标记
+        self.fields['username'].label = '用户名 *'
+        
         if user and not user.is_admin:
             # 非管理员用户不能创建管理员账号
             self.fields['user_type'].choices = [('user', '普通用户')]
@@ -243,7 +286,7 @@ class UserEditForm(forms.ModelForm):
             # 非管理员用户不能修改用户类型
             self.fields['user_type'].widget = forms.HiddenInput()
             self.fields['is_active'].widget = forms.HiddenInput()
-            # 非管理员只能分配自己有���限的数据中心
+            # 非管理员只能分配自己有权限的数据中心
             self.fields['data_centers'].queryset = user.data_centers.all()
 
     def save(self, commit=True):
@@ -261,3 +304,23 @@ class UserEditForm(forms.ModelForm):
             user.save()
             self.save_m2m()  # 保存多对多关系（数据中心）
         return user
+
+class AdminPasswordChangeForm(forms.Form):
+    """管理员修改用户密码的表单"""
+    password1 = forms.CharField(
+        label='新密码',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}),
+        min_length=6,
+        help_text='密���长度至少6个字符'
+    )
+    password2 = forms.CharField(
+        label='确认密码',
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    )
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get('password1')
+        password2 = self.cleaned_data.get('password2')
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError('两次输入的密码不一致')
+        return password2

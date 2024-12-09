@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMix
 from django.views.generic import ListView, CreateView, UpdateView
 from django.core.exceptions import PermissionDenied
 from .models import User
-from .forms import UserCreateForm, UserUpdateForm, PasswordChangeForm, UserPermissionForm, UserEditForm
+from .forms import UserCreateForm, UserUpdateForm, PasswordChangeForm, UserPermissionForm, UserEditForm, AdminPasswordChangeForm
 
 class UserListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
     model = User
@@ -77,20 +77,28 @@ def user_delete(request, pk):
     return render(request, 'accounts/user_confirm_delete.html', {'user': user})
 
 @login_required
-def change_password(request):
+def change_password(request, user_id):
+    """管理员修改用户密码"""
+    if not request.user.is_admin:
+        messages.error(request, '只有管理员可以修改用户密码')
+        return redirect('accounts:user_list')
+    
+    user = get_object_or_404(User, pk=user_id)
+    
     if request.method == 'POST':
-        form = PasswordChangeForm(request.POST)
+        form = AdminPasswordChangeForm(request.POST)
         if form.is_valid():
-            if request.user.check_password(form.cleaned_data['old_password']):
-                request.user.set_password(form.cleaned_data['new_password1'])
-                request.user.save()
-                messages.success(request, '密码修改成功，请重新登录')
-                return redirect('login')
-            else:
-                messages.error(request, '原密码错误')
+            user.set_password(form.cleaned_data['password1'])
+            user.save()
+            messages.success(request, f'用户 {user.username} 的密码已成功修改')
+            return redirect('accounts:user_list')
     else:
-        form = PasswordChangeForm()
-    return render(request, 'accounts/change_password.html', {'form': form})
+        form = AdminPasswordChangeForm()
+    
+    return render(request, 'accounts/change_password.html', {
+        'form': form,
+        'target_user': user
+    })
 
 @login_required
 @permission_required('auth.change_user', raise_exception=True)
