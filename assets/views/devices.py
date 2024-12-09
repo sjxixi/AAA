@@ -21,6 +21,8 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import permission_required
 import json
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
+from django.views.generic import DeleteView
+from django.urls import reverse_lazy
 
 class BaseDeviceView(LoginRequiredMixin, View):
     """设备视图基类"""
@@ -177,7 +179,7 @@ class BaseDeviceView(LoginRequiredMixin, View):
                 return redirect(f'assets:{self.get_url_prefix()}_detail', pk=device.pk)
         else:
             form = self.form_class()
-            # 限制数据中心选择
+            # 限制数据中心选��
             if not request.user.is_admin:
                 form.fields['data_center'].queryset = request.user.data_centers.all()
 
@@ -585,7 +587,7 @@ def batch_delete(request):
                 object_id=device.id,
                 object_repr=str(device),
                 action_flag=DELETION,
-                change_message=f'批量删除操作'
+                change_message=f'批删除操作'
             )
         
         # 执行删除
@@ -594,3 +596,109 @@ def batch_delete(request):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}) 
+
+def server_create(request):
+    """创建服务器视图"""
+    if request.method == 'POST':
+        form = ServerForm(request.POST)
+        if form.is_valid():
+            # 检查用户是否有权操作选择的数据中心
+            data_center = form.cleaned_data.get('data_center')
+            if not request.user.is_admin and not request.user.data_centers.filter(id=data_center.id).exists():
+                messages.error(request, '您没有权限在该数据中心创建设备')
+                return render(request, 'assets/device_form.html', {'form': form})
+
+            device = form.save()
+            messages.success(request, f'服务器 {device.name} 创建成功')
+            return redirect('assets:server_list')
+    else:
+        form = ServerForm()
+        # 限制数据中心选择
+        if not request.user.is_admin:
+            form.fields['data_center'].queryset = request.user.data_centers.all()
+
+    return render(request, 'assets/device_form.html', {
+        'form': form,
+        'title': '添加服务器'
+    })
+
+def network_create(request):
+    """创建网络设备视图"""
+    if request.method == 'POST':
+        form = NetworkDeviceForm(request.POST)
+        if form.is_valid():
+            data_center = form.cleaned_data.get('data_center')
+            if not request.user.is_admin and not request.user.data_centers.filter(id=data_center.id).exists():
+                messages.error(request, '您没有权限在该数据中心创建设备')
+                return render(request, 'assets/device_form.html', {'form': form})
+
+            device = form.save()
+            messages.success(request, f'网络设备 {device.name} 创建成功')
+            return redirect('assets:network_list')
+    else:
+        form = NetworkDeviceForm()
+        if not request.user.is_admin:
+            form.fields['data_center'].queryset = request.user.data_centers.all()
+
+    return render(request, 'assets/device_form.html', {
+        'form': form,
+        'title': '添加网络设备'
+    })
+
+def storage_create(request):
+    """创建存储设备视图"""
+    if request.method == 'POST':
+        form = StorageDeviceForm(request.POST)
+        if form.is_valid():
+            data_center = form.cleaned_data.get('data_center')
+            if not request.user.is_admin and not request.user.data_centers.filter(id=data_center.id).exists():
+                messages.error(request, '您没有权限在该数据中心创建设备')
+                return render(request, 'assets/device_form.html', {'form': form})
+
+            device = form.save()
+            messages.success(request, f'存储设备 {device.name} 创建成功')
+            return redirect('assets:storage_list')
+    else:
+        form = StorageDeviceForm()
+        if not request.user.is_admin:
+            form.fields['data_center'].queryset = request.user.data_centers.all()
+
+    return render(request, 'assets/device_form.html', {
+        'form': form,
+        'title': '添加存储设备'
+    })
+
+def security_create(request):
+    """创建安全设备视图"""
+    if request.method == 'POST':
+        form = SecurityDeviceForm(request.POST)
+        if form.is_valid():
+            data_center = form.cleaned_data.get('data_center')
+            if not request.user.is_admin and not request.user.data_centers.filter(id=data_center.id).exists():
+                messages.error(request, '您没有权限在该数据中心创建设备')
+                return render(request, 'assets/device_form.html', {'form': form})
+
+            device = form.save()
+            messages.success(request, f'安全设备 {device.name} 创建成功')
+            return redirect('assets:security_list')
+    else:
+        form = SecurityDeviceForm()
+        if not request.user.is_admin:
+            form.fields['data_center'].queryset = request.user.data_centers.all()
+
+    return render(request, 'assets/device_form.html', {
+        'form': form,
+        'title': '添加安全设备'
+    })
+
+# 更新 __all__ 列表，添加新的视图函数
+__all__ = [
+    'ServerView', 
+    'NetworkDeviceView', 
+    'StorageDeviceView', 
+    'SecurityDeviceView',
+    'server_create',
+    'network_create',
+    'storage_create',
+    'security_create'
+] 

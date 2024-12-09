@@ -14,14 +14,12 @@ class BaseDeviceForm(forms.ModelForm):
                 attrs={
                     'class': 'form-control',
                     'type': 'date',
-                    'format': 'yyyy-mm-dd'
                 }
             ),
             'warranty_date': forms.DateInput(
                 attrs={
                     'class': 'form-control',
                     'type': 'date',
-                    'format': 'yyyy-mm-dd'
                 }
             ),
             'status': forms.Select(attrs={'class': 'form-control'}),
@@ -34,27 +32,31 @@ class BaseDeviceForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.instance and self.instance.pk:
-            if self.instance.purchase_date:
-                self.initial['purchase_date'] = self.instance.purchase_date.strftime('%Y-%m-%d')
-            if self.instance.warranty_date:
-                self.initial['warranty_date'] = self.instance.warranty_date.strftime('%Y-%m-%d')
+        # 移除状态字段的默认值
+        self.fields['status'].empty_label = None  # 不显示空选项
+        self.fields['status'].initial = None  # 清除初始值
 
 class ServerForm(BaseDeviceForm):
     """服务器表单"""
     class Meta(BaseDeviceForm.Meta):
         model = Server
-        fields = '__all__'
+        fields = [
+            'name', 'hostname', 'ip_address', 'mac_address',
+            'os_type', 'os_version', 'cpu_model', 'cpu_count',
+            'cpu_cores', 'memory_size', 'disk_info', 'business_system',
+            'status', 'data_center', 'rack_position', 'manufacturer',
+            'model', 'sn', 'purchase_date', 'warranty_date', 'description'
+        ]
         widgets = {
-            **BaseDeviceForm.Meta.widgets,
+            **BaseDeviceForm.Meta.widgets,  # 继承基类的 widgets
             'hostname': forms.TextInput(attrs={'class': 'form-control'}),
+            'os_type': forms.TextInput(attrs={'class': 'form-control'}),
+            'os_version': forms.TextInput(attrs={'class': 'form-control'}),
             'cpu_model': forms.TextInput(attrs={'class': 'form-control'}),
             'cpu_count': forms.NumberInput(attrs={'class': 'form-control'}),
             'cpu_cores': forms.NumberInput(attrs={'class': 'form-control'}),
             'memory_size': forms.NumberInput(attrs={'class': 'form-control'}),
             'disk_info': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'os_type': forms.TextInput(attrs={'class': 'form-control'}),
-            'os_version': forms.TextInput(attrs={'class': 'form-control'}),
             'business_system': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
