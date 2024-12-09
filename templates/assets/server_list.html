@@ -17,7 +17,9 @@
 <td class="text-wrap">{{ device.os_type }} {{ device.os_version }}</td>
 <td class="text-wrap">{{ device.business_system }}</td>
 <td class="text-nowrap">{{ device.data_center }}</td>
-<td class="text-nowrap">{{ device.get_status_display }}</td>
+<td>
+    {% include 'assets/includes/status_badge.html' with device=device %}
+</td>
 {% endblock %}
 
 {% block add_button %}

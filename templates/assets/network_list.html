@@ -15,7 +15,9 @@
 <td class="text-wrap">{{ device.device_type }}</td>
 <td class="text-end">{{ device.port_count }}</td>
 <td class="text-nowrap">{{ device.data_center }}</td>
-<td class="text-nowrap">{{ device.get_status_display }}</td>
+<td>
+    {% include 'assets/includes/status_badge.html' with device=device %}
+</td>
 {% endblock %}
 
 {% block extra_js %}

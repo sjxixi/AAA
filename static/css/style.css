@@ -743,24 +743,59 @@ body.login-page .footer {
     word-break: break-all;
 }
 
-/* 状态标签 */
+/* 状态标签样式 */
 .status-badge {
     display: inline-flex;
     align-items: center;
-    padding: 0.25rem 0.75rem;
-    border-radius: 50px;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
     font-size: 0.85rem;
     font-weight: 500;
+    width: fit-content;
 }
 
+.status-badge i {
+    font-size: 0.85rem;
+}
+
+.status-badge span {
+    margin-left: 4px;
+}
+
+/* 运行中状态 */
 .status-running {
-    background: rgba(40, 167, 69, 0.1);
+    background-color: rgba(40, 167, 69, 0.15);
     color: #28a745;
+    border: 1px solid rgba(40, 167, 69, 0.2);
 }
 
+/* 已停止状态 */
 .status-stopped {
-    background: rgba(220, 53, 69, 0.1);
+    background-color: rgba(108, 117, 125, 0.15);
+    color: #6c757d;
+    border: 1px solid rgba(108, 117, 125, 0.2);
+}
+
+/* 维护中状态 */
+.status-maintenance {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+/* 故障状态 */
+.status-fault {
+    background-color: rgba(220, 53, 69, 0.15);
     color: #dc3545;
+    border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+/* 鼠标悬停效果 */
+.status-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
 }
 
 /* 响应式调整 */

@@ -94,6 +94,8 @@ class BaseDeviceView(LoginRequiredMixin, View):
     def list_view(self, request):
         """列表视图"""
         queryset = self.get_queryset()
+        for device in queryset:
+            print(f"Device: {device.name}, Status: {device.status}")  # 调试信息
         filter = self.filter_class(request.GET, queryset=queryset)
         
         # 处理导出请求

@@ -12,7 +12,19 @@ class BaseDevice(models.Model):
     manufacturer = models.CharField('制造商', max_length=100)
     purchase_date = models.DateField('采购日期')
     warranty_date = models.DateField('保修期限')
-    status = models.CharField('状态', max_length=20, choices=[(k, v) for k, v in settings.DEVICE_STATUS.items()])
+    STATUS_CHOICES = [
+        ('running', '运行中'),
+        ('stopped', '已停止'),
+        ('maintenance', '维护中'),
+        ('fault', '故障'),
+    ]
+
+    status = models.CharField(
+        '状态',
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='running'
+    )
     data_center = models.ForeignKey(DataCenter, on_delete=models.PROTECT, verbose_name='所属数据中心')
     rack_position = models.CharField('机架位置', max_length=50)
     ip_address = models.GenericIPAddressField('IP地址', unique=True)
@@ -33,42 +45,31 @@ class BaseDevice(models.Model):
         """检查用户是否可以编辑该设备"""
         if user.is_admin:
             return True
-        # 检查用户是否同时具有编辑权限和数据中心权限
         model_name = self._meta.model_name
-        return user.has_perm(f'assets.change_{model_name}', self)  # 传入 self 作为 obj 参数
+        return user.has_perm(f'assets.change_{model_name}', self)
 
     def can_edit_by(self, user):
-        """
-        模板友好的编辑权限检查方法
-        """
+        """模板友好的编辑权限检查方法"""
         if user.is_admin:
             return True
-        # 检查用户是否同时具有编辑权限和数据中心权限
         model_name = self._meta.model_name
         return user.has_perm(f'assets.change_{model_name}', self)
 
 class Server(BaseDevice):
     """服务器模型"""
-    hostname = models.CharField('主机名', max_length=100, unique=True)
+    hostname = models.CharField('主机名', max_length=50)
+    os_type = models.CharField('操作系统类型', max_length=50)
+    os_version = models.CharField('操作系统版本', max_length=50)
     cpu_model = models.CharField('CPU型号', max_length=100)
     cpu_count = models.IntegerField('CPU数量')
     cpu_cores = models.IntegerField('CPU核心数')
     memory_size = models.IntegerField('内存大小(GB)')
     disk_info = models.TextField('硬盘信息')
-    os_type = models.CharField('操作系统类型', max_length=50)
-    os_version = models.CharField('操作系统版本', max_length=50)
-    business_system = models.CharField('业务系统', max_length=100)
-    
-    history = HistoricalRecords()
+    business_system = models.CharField('业务系统', max_length=50)
 
     class Meta:
         verbose_name = '服务器'
         verbose_name_plural = verbose_name
-        default_permissions = ('view', 'add', 'change', 'delete')
-        permissions = [
-            ('export_server', '导出服务器信息'),
-            ('import_server', '导入服务器信息'),
-        ]
 
     def __str__(self):
         return self.hostname

@@ -17,5 +17,7 @@
 <td class="text-end">{{ device.total_capacity }}</td>
 <td class="text-end">{{ device.used_capacity }}</td>
 <td class="text-nowrap">{{ device.data_center }}</td>
-<td class="text-nowrap">{{ device.get_status_display }}</td>
+<td>
+    {% include 'assets/includes/status_badge.html' with device=device %}
+</td>
 {% endblock %} 

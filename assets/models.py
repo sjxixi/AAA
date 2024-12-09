@@ -1,6 +1,27 @@
 from django.db import models
 from django.utils import timezone
 
+class BaseDevice(models.Model):
+    """设备基类"""
+    STATUS_CHOICES = [
+        ('running', '运行中'),
+        ('stopped', '已停止'),
+        ('maintenance', '维护中'),
+        ('fault', '故障'),
+    ]
+
+    name = models.CharField('名称', max_length=50)
+    # ... 其他字段 ...
+    status = models.CharField(
+        '状态',
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='running'
+    )
+
+    class Meta:
+        abstract = True
+
 class DataCenter(models.Model):
     name = models.CharField('名称', max_length=50, unique=True)
     location = models.CharField('位置', max_length=100)
