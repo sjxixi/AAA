@@ -6,7 +6,13 @@ from django.core.paginator import Paginator
 from django.conf import settings
 from django.utils.decorators import method_decorator
 from django.views import View
-from assets.models import Server, NetworkDevice, StorageDevice, SecurityDevice
+from assets.models import (
+    Device,
+    Server,
+    NetworkDevice,
+    StorageDevice,
+    SecurityDevice
+)
 from assets.forms.devices import (
     ServerForm, NetworkDeviceForm, StorageDeviceForm, SecurityDeviceForm
 )
@@ -23,6 +29,9 @@ import json
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.views.generic import DeleteView
 from django.urls import reverse_lazy
+from django.contrib.admin.models import LogEntry, DELETION
+from django.contrib.contenttypes.models import ContentType
+
 
 class BaseDeviceView(LoginRequiredMixin, View):
     """设备视图基类"""
@@ -36,12 +45,12 @@ class BaseDeviceView(LoginRequiredMixin, View):
 
     def dispatch(self, request, *args, **kwargs):
         """处理请求分发"""
-        print("=== 请求分发调试信息 ===")
-        print(f"请求路径: {request.path}")
-        print(f"URL名称: {request.resolver_match.url_name}")
-        print(f"请求方法: {request.method}")
-        print(f"参数: {kwargs}")
-        
+        # print("=== 请求分发调试信息 ===")
+        # print(f"请求路径: {request.path}")
+        # print(f"URL名称: {request.resolver_match.url_name}")
+        # print(f"请求方法: {request.method}")
+        # print(f"参数: {kwargs}")
+
         if not request.user.is_authenticated:
             return self.handle_no_permission()
 
@@ -55,11 +64,11 @@ class BaseDeviceView(LoginRequiredMixin, View):
 
         # 根据URL名称决定显示哪个视图
         url_name = request.resolver_match.url_name
-        
+
         # 处理编辑视图
         if url_name and url_name.endswith('_edit'):
             return self.edit_view(request, pk)
-        
+
         # 处理其他视图
         if pk:
             if url_name.endswith('_history'):
@@ -96,10 +105,10 @@ class BaseDeviceView(LoginRequiredMixin, View):
     def list_view(self, request):
         """列表视图"""
         queryset = self.get_queryset()
-        for device in queryset:
-            print(f"Device: {device.name}, Status: {device.status}")  # 调试信息
+        # for device in queryset:
+        #     print(f"Device: {device.name}, Status: {device.status}")  # 调试信息
         filter = self.filter_class(request.GET, queryset=queryset)
-        
+
         # 处理导出请求
         if 'export' in request.GET:
             resource = self.resource_class()
@@ -112,23 +121,24 @@ class BaseDeviceView(LoginRequiredMixin, View):
             else:
                 # 否则导出过滤后的所有数据
                 queryset = filter.qs
-            
+
             dataset = resource.export(queryset)
             response = HttpResponse(
                 dataset.export('xlsx'),
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             )
-            response['Content-Disposition'] = f'attachment; filename="{self.model._meta.verbose_name}_{datetime.date.today()}.xlsx"'
+            response[
+                'Content-Disposition'] = f'attachment; filename="{self.model._meta.verbose_name}_{datetime.date.today()}.xlsx"'
             return response
 
         # 分页
         paginator = Paginator(filter.qs, settings.PAGINATION_PAGE_SIZE)
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
-        
+
         # 获取模型名称
         model_name = self.model._meta.model_name
-        
+
         context = {
             'filter': filter,
             'page_obj': page_obj,
@@ -155,7 +165,7 @@ class BaseDeviceView(LoginRequiredMixin, View):
         return render(request, self.template_name_list, context)
 
     def detail_view(self, request, pk):
-        """详���视图"""
+        """详情视图"""
         device = get_object_or_404(self.get_queryset(), pk=pk)
         return render(request, self.template_name_detail, {'device': device})
 
@@ -191,24 +201,24 @@ class BaseDeviceView(LoginRequiredMixin, View):
 
     def edit_view(self, request, pk):
         """编辑视图"""
-        print("=== 编辑视图调试信息 ===")
-        print(f"请求方法: {request.method}")
-        print(f"设备ID: {pk}")
-        
+        # print("=== 编辑视图调试信息 ===")
+        # print(f"请求方法: {request.method}")
+        # print(f"设备ID: {pk}")
+
         device = get_object_or_404(self.get_queryset(), pk=pk)
-        
+
         # 检查编辑权限
         model_name = self.model._meta.model_name
         perm = f'assets.change_{model_name}'
-        
-        print(f"用户: {request.user.username}")
-        print(f"是否管理员: {request.user.is_admin}")
-        print(f"权限: {perm}")
-        
+
+        # print(f"用户: {request.user.username}")
+        # print(f"是否管理员: {request.user.is_admin}")
+        # print(f"权限: {perm}")
+
         if not request.user.has_perm(perm, device):
             messages.error(request, f'您没有修改{self.model._meta.verbose_name}的权限')
             return redirect(f'assets:{self.get_url_prefix()}_detail', pk=pk)
-        
+
         if request.method == 'POST':
             form = self.form_class(request.POST, instance=device)
             if form.is_valid():
@@ -259,15 +269,15 @@ class BaseDeviceView(LoginRequiredMixin, View):
             'SecurityDevice': 'security'
         }
         url_prefix = url_prefixes.get(self.model.__name__, '')
-        
+
         device = get_object_or_404(self.model, pk=pk)
         history = device.history.all().order_by('-history_date')
-        
+
         # 处理历史记录
         history_list = list(history)
-        for i in range(len(history_list)-1):
+        for i in range(len(history_list) - 1):
             current = history_list[i]
-            previous = history_list[i+1]
+            previous = history_list[i + 1]
             delta = current.diff_against(previous)
             current.changes = []
             for change in delta.changes:
@@ -281,7 +291,7 @@ class BaseDeviceView(LoginRequiredMixin, View):
                     'old': change.old,
                     'new': change.new
                 })
-        
+
         context = {
             'device': device,
             'history': history_list,
@@ -298,8 +308,17 @@ class BaseDeviceView(LoginRequiredMixin, View):
         """检查用户是否有据中心权限"""
         return self.request.user.has_datacenter_perm(datacenter_id)
 
+
 class ServerView(BaseDeviceView):
+    """服务器视图"""
     template_name_list = 'assets/server_list.html'
+    template_name_detail = 'assets/server_detail.html'
+    template_name_form = 'assets/device_form.html'
+    model = Server
+    form_class = ServerForm
+    filter_class = ServerFilter
+    resource_class = ServerResource
+
     def dispatch(self, request, *args, **kwargs):
         """权限检查"""
         if not request.user.is_authenticated:
@@ -314,15 +333,6 @@ class ServerView(BaseDeviceView):
                 
         return super().dispatch(request, *args, **kwargs)
 
-class ServerView(BaseDeviceView):
-    template_name_list = 'assets/server_list.html'
-    template_name_detail = 'assets/server_detail.html'
-    template_name_form = 'assets/device_form.html'
-    model = Server
-    form_class = ServerForm
-    filter_class = ServerFilter
-    resource_class = ServerResource
-
     def get(self, request, pk=None):
         if pk is None:
             queryset = self.get_queryset()
@@ -330,7 +340,7 @@ class ServerView(BaseDeviceView):
             paginator = Paginator(filter.qs, settings.PAGINATION_PAGE_SIZE)
             page_number = request.GET.get('page')
             page_obj = paginator.get_page(page_number)
-            
+
             context = {
                 'filter': filter,
                 'page_obj': page_obj,
@@ -385,8 +395,9 @@ class ServerView(BaseDeviceView):
             messages.success(request, f'{self.model._meta.verbose_name} {device_name} 已成功删除')
         except Exception as e:
             messages.error(request, f'删除失败：{str(e)}')
-        
+
         return redirect('assets:server_list')
+
 
 class NetworkDeviceView(BaseDeviceView):
     template_name_list = 'assets/network_list.html'
@@ -404,7 +415,7 @@ class NetworkDeviceView(BaseDeviceView):
             paginator = Paginator(filter.qs, settings.PAGINATION_PAGE_SIZE)
             page_number = request.GET.get('page')
             page_obj = paginator.get_page(page_number)
-            
+
             context = {
                 'filter': filter,
                 'page_obj': page_obj,
@@ -459,8 +470,9 @@ class NetworkDeviceView(BaseDeviceView):
             messages.success(request, f'{self.model._meta.verbose_name} {device_name} 已成功删除')
         except Exception as e:
             messages.error(request, f'删除失败：{str(e)}')
-        
+
         return redirect('assets:network_list')
+
 
 class StorageDeviceView(BaseDeviceView):
     template_name_list = 'assets/storage_list.html'
@@ -478,7 +490,7 @@ class StorageDeviceView(BaseDeviceView):
             paginator = Paginator(filter.qs, settings.PAGINATION_PAGE_SIZE)
             page_number = request.GET.get('page')
             page_obj = paginator.get_page(page_number)
-            
+
             context = {
                 'filter': filter,
                 'page_obj': page_obj,
@@ -514,8 +526,9 @@ class StorageDeviceView(BaseDeviceView):
             if 'delete' in request.path:
                 return self.delete_view(request, pk)
             if not request.user.has_perm('assets.change_storagedevice'):
-                return JsonResponse({'status': 'error', 'message': '没有修改权限'})
+                return JsonResponse({'status': 'error', 'message': '没有修��权限'})
             return self.edit_view(request, pk)
+
 
 class SecurityDeviceView(BaseDeviceView):
     template_name_list = 'assets/security_list.html'
@@ -533,7 +546,7 @@ class SecurityDeviceView(BaseDeviceView):
             paginator = Paginator(filter.qs, settings.PAGINATION_PAGE_SIZE)
             page_number = request.GET.get('page')
             page_obj = paginator.get_page(page_number)
-            
+
             context = {
                 'filter': filter,
                 'page_obj': page_obj,
@@ -572,13 +585,14 @@ class SecurityDeviceView(BaseDeviceView):
                 return JsonResponse({'status': 'error', 'message': '没有修改权限'})
             return self.edit_view(request, pk)
 
+
 @require_POST
 @permission_required('assets.delete_device')
 def batch_delete(request):
     try:
         data = json.loads(request.body)
         ids = data.get('ids', [])
-        
+
         # 记录操作日志
         for device_id in ids:
             device = get_object_or_404(Device, id=device_id)
@@ -590,13 +604,14 @@ def batch_delete(request):
                 action_flag=DELETION,
                 change_message=f'批删除操作'
             )
-        
+
         # 执行删除
         Device.objects.filter(id__in=ids).delete()
-        
+
         return JsonResponse({'success': True})
     except Exception as e:
-        return JsonResponse({'success': False, 'message': str(e)}) 
+        return JsonResponse({'success': False, 'message': str(e)})
+
 
 def server_create(request):
     """创建服务器视图"""
@@ -626,6 +641,7 @@ def server_create(request):
         'model_type': 'server'
     })
 
+
 def network_create(request):
     """创建网络设备视图"""
     if request.method == 'POST':
@@ -653,6 +669,7 @@ def network_create(request):
         'title': '添加网络设备',
         'model_type': 'network'
     })
+
 
 def storage_create(request):
     """创建存储设备视图"""
@@ -682,6 +699,7 @@ def storage_create(request):
         'model_type': 'storage'
     })
 
+
 def security_create(request):
     """创建安全设备视图"""
     if request.method == 'POST':
@@ -710,11 +728,12 @@ def security_create(request):
         'model_type': 'security'
     })
 
+
 # 更新 __all__ 列表，添加新的视图函数
 __all__ = [
-    'ServerView', 
-    'NetworkDeviceView', 
-    'StorageDeviceView', 
+    'ServerView',
+    'NetworkDeviceView',
+    'StorageDeviceView',
     'SecurityDeviceView',
     'server_create',
     'network_create',

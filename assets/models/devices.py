@@ -4,7 +4,7 @@ from django.utils import timezone
 from simple_history.models import HistoricalRecords
 from .datacenter import DataCenter
 
-class BaseDevice(models.Model):
+class Device(models.Model):
     """设备基类"""
     name = models.CharField('名称', max_length=100)
     model = models.CharField('型号', max_length=100)
@@ -55,7 +55,7 @@ class BaseDevice(models.Model):
         model_name = self._meta.model_name
         return user.has_perm(f'assets.change_{model_name}', self)
 
-class Server(BaseDevice):
+class Server(Device):
     """服务器模型"""
     hostname = models.CharField('主机名', max_length=50)
     os_type = models.CharField('操作系统类型', max_length=50)
@@ -74,7 +74,7 @@ class Server(BaseDevice):
     def __str__(self):
         return self.hostname
 
-class NetworkDevice(BaseDevice):
+class NetworkDevice(Device):
     """网络设备模型"""
     device_type = models.CharField('设备类型', max_length=50)  # 如交换机、路由器等
     port_count = models.IntegerField('端口数量')
@@ -97,7 +97,7 @@ class NetworkDevice(BaseDevice):
     def __str__(self):
         return self.name
 
-class StorageDevice(BaseDevice):
+class StorageDevice(Device):
     """存储设备模型"""
     storage_type = models.CharField('存储类型', max_length=50)  # 如SAN、NAS等
     total_capacity = models.DecimalField('总容量(TB)', max_digits=10, decimal_places=2)
@@ -120,7 +120,7 @@ class StorageDevice(BaseDevice):
     def __str__(self):
         return self.name
 
-class SecurityDevice(BaseDevice):
+class SecurityDevice(Device):
     """安全设备模型"""
     device_type = models.CharField('设备类型', max_length=50)  # 如防火墙、IDS等
     software_version = models.CharField('软件版本', max_length=50)

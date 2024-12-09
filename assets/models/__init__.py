@@ -1,5 +1,6 @@
 from .datacenter import DataCenter
 from .devices import (
+    Device,
     Server,
     NetworkDevice,
     StorageDevice,
@@ -7,6 +8,7 @@ from .devices import (
 )
 
 __all__ = [
+    'Device',
     'DataCenter',
     'Server',
     'NetworkDevice',
