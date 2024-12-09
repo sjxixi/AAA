@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load permission_tags %}
+{% load user_tags %}
 
 {% block content %}
 {% csrf_token %}
@@ -10,7 +12,7 @@
 {% else %}
     <div class="card">
         <div class="card-header">
-            <h2>{{ model_name }}列表</h2>
+            <h2>{{ verbose_name }}列表</h2>
             <div class="batch-actions">
                 <button class="btn btn-danger" onclick="batchDelete()">
                     <i class="fas fa-trash"></i> 批量删除
@@ -38,17 +40,22 @@
                     <button type="button" class="btn btn-secondary" onclick="window.location.href='?'">
                         <i class="fas fa-redo"></i> 重置
                     </button>
-                    {% if perms.assets.export_device %}
+                    
+                    {% if perms.export %}
                     <a href="?export=1" class="btn btn-success">
                         <i class="fas fa-file-export"></i> 导出Excel
                     </a>
                     {% endif %}
-                    {% if perms.assets.add_device %}
+                    
+                    {% if perms.import %}
                     <button type="button" class="btn btn-info" onclick="showImportModal()">
                         <i class="fas fa-file-import"></i> 导入Excel
                     </button>
+                    {% endif %}
+                    
+                    {% if perms.add %}
                     <a href="{% url view_create %}" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> 添加{{ model_name }}
+                        <i class="fas fa-plus"></i> 添加{{ verbose_name }}
                     </a>
                     {% endif %}
                 </div>
@@ -75,26 +82,23 @@
                         {% block table_cells %}{% endblock %}
                         <td class="col-actions">
                             <div class="action-buttons">
-                                {% if perms.assets.view_device %}
+                                {% if perms.view %}
                                 <a href="{% url view_detail device.id %}" class="btn btn-info btn-sm" title="查看详情">
                                     <i class="fas fa-eye"></i> 查看
                                 </a>
                                 {% endif %}
-                                {% if perms.assets.change_device %}
+
+                                {% if user|can_edit_device:device %}
                                 <a href="{% url view_edit device.id %}" class="btn btn-primary btn-sm" title="编辑">
                                     <i class="fas fa-edit"></i> 编辑
                                 </a>
                                 {% endif %}
-                                {% if perms.assets.view_history %}
-                                <a href="{% url view_history device.id %}" class="btn btn-secondary btn-sm" title="历史记录">
-                                    <i class="fas fa-history"></i> 历史
-                                </a>
-                                {% endif %}
-                                {% if perms.assets.delete_device %}
+
+                                {% if perms.delete %}
                                 <form method="post" action="{% url view_delete pk=device.pk %}" style="display: inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-danger btn-sm" 
-                                            onclick="return confirm('确定要删除这个{{ model_name }}吗？')"
+                                            onclick="return confirm('确定要删除这个{{ verbose_name }}吗？')"
                                             title="删除">
                                         <i class="fas fa-trash"></i> 删除
                                     </button>
@@ -119,7 +123,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">导入{{ model_name }}</h5>
+                        <h5 class="modal-title">导入{{ verbose_name }}</h5>
                         <button type="button" class="close" onclick="closeImportModal()">&times;</button>
                     </div>
                     <form method="post" enctype="multipart/form-data" action="{% url 'assets:import_data' %}" onsubmit="return validateImport()">
@@ -412,7 +416,7 @@
 
 {% block extra_js %}
 <script>
-// 全选/取消全选
+// 全选/取消全
 function toggleSelectAll() {
     const selectAll = document.getElementById('selectAll');
     const checkboxes = document.getElementsByName('selected_items');
@@ -422,7 +426,7 @@ function toggleSelectAll() {
     });
 }
 
-// 更新全选框状态
+// 更新全选状态
 function updateSelectAllState() {
     const selectAll = document.getElementById('selectAll');
     const checkboxes = document.getElementsByName('selected_items');
@@ -452,11 +456,11 @@ function getSelectedIds() {
 function batchDelete() {
     const selectedIds = getSelectedIds();
     if (selectedIds.length === 0) {
-        alert('请选择要删除的项目');
+        alert('请选择要删除的目');
         return;
     }
     
-    if (confirm('确定要删除选中的项目吗？')) {
+    if (confirm('确定要删除中的项目吗？')) {
         fetch('{% url "assets:batch_delete" %}', {
             method: 'POST',
             headers: {

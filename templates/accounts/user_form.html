@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user.id|yesno:"编辑,添加" }}用户 - CMDB资产管理系统{% endblock %}
+
+{% block content %}
+<div class="user-form-card">
+    <div class="form-header">
+        <h2><i class="fas fa-user-plus"></i> {{ user.id|yesno:"编辑,添加" }}用户</h2>
+    </div>
+    
+    <form method="post" class="user-form">
+        {% csrf_token %}
+        
+        <!-- 基本信息 -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-info-circle"></i>
+                <span>基本信息</span>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="{{ form.username.id_for_label }}" class="required">用户名</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                    <span class="error-message">{{ form.username.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.email.id_for_label }}">电子邮件</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <span class="error-message">{{ form.email.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 密码字段 -->
+            {% if not object %}  {# 只在创建新用户时显示密码字段 #}
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="{{ form.password1.id_for_label }}" class="required">密码</label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                    <span class="error-message">{{ form.password1.errors.0 }}</span>
+                    {% endif %}
+                    {% if form.password1.help_text %}
+                    <small class="help-text">{{ form.password1.help_text }}</small>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.password2.id_for_label }}" class="required">确认密码</label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                    <span class="error-message">{{ form.password2.errors.0 }}</span>
+                    {% endif %}
+                    {% if form.password2.help_text %}
+                    <small class="help-text">{{ form.password2.help_text }}</small>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- 其他信息 -->
+        <div class="form-section">
+            <div class="section-title">
+                <i class="fas fa-user-cog"></i>
+                <span>其他信息</span>
+            </div>
+            
+            <div class="form-grid">
+                <div class="form-field">
+                    <label for="{{ form.phone.id_for_label }}">手机号</label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                    <span class="error-message">{{ form.phone.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.department.id_for_label }}">部门</label>
+                    {{ form.department }}
+                    {% if form.department.errors %}
+                    <span class="error-message">{{ form.department.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.position.id_for_label }}">职位</label>
+                    {{ form.position }}
+                    {% if form.position.errors %}
+                    <span class="error-message">{{ form.position.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-field">
+                    <label for="{{ form.user_type.id_for_label }}" class="required">用户类型</label>
+                    {{ form.user_type }}
+                    {% if form.user_type.errors %}
+                    <span class="error-message">{{ form.user_type.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-field checkbox-field">
+                {{ form.is_active }}
+                <label for="{{ form.is_active.id_for_label }}">是否激活</label>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-save">
+                <i class="fas fa-save"></i> 保存
+            </button>
+            <a href="{% url 'accounts:user_list' %}" class="btn-cancel">
+                <i class="fas fa-times"></i> 取消
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.user-form-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+    max-width: 800px;
+}
+
+.form-header {
+    background: #1a237e;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 8px 8px 0 0;
+}
+
+.form-header h2 {
+    margin: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.user-form {
+    padding: 24px;
+}
+
+.form-section {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #2c3e50;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.section-title i {
+    color: #3498db;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.form-field {
+    margin-bottom: 16px;
+}
+
+.form-field label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #34495e;
+    margin-bottom: 6px;
+}
+
+.form-field label.required:after {
+    content: "*";
+    color: #e74c3c;
+    margin-left: 4px;
+}
+
+.form-field input,
+.form-field select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    outline: none;
+}
+
+.checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.checkbox-field input[type="checkbox"] {
+    width: auto;
+}
+
+.error-message {
+    display: block;
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn-save,
+.btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-save {
+    background: #2980b9;
+    color: white;
+    border: none;
+}
+
+.btn-save:hover {
+    background: #2472a4;
+    transform: translateY(-1px);
+}
+
+.btn-cancel {
+    background: #95a5a6;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-cancel:hover {
+    background: #7f8c8d;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .user-form-card {
+        margin: 10px;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-section {
+        padding: 16px;
+    }
+}
+
+/* 添加密码字段相关样式 */
+.help-text {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.form-field input[type="password"] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.form-field input[type="password"]:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    outline: none;
+}
+</style>
+{% endblock %} 

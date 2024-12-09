@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'accounts.apps.AccountsConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -263,3 +264,6 @@ IMPORT_EXPORT_LOGGING = {
         },
     }
 }
+
+# 指定自定义用户模型
+AUTH_USER_MODEL = 'accounts.User'

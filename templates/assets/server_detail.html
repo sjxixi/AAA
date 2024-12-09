@@ -1,12 +1,15 @@
 {% extends 'base.html' %}
+{% load permission_tags %}
 
 {% block content %}
 <div class="detail-header">
     <h2>{{ device.hostname }} - 服务器详情</h2>
     <div>
+        {% if user|can_edit_server:device %}
         <a href="{% url 'assets:server_edit' device.id %}" class="btn btn-primary">
             <i class="fas fa-edit"></i> 编辑
         </a>
+        {% endif %}
         <a href="{% url 'assets:server_list' %}" class="btn btn-secondary">
             <i class="fas fa-arrow-left"></i> 返回列表
         </a>
@@ -81,7 +84,7 @@
             <span>{{ device.business_system }}</span>
         </div>
         <div class="detail-item">
-            <label>序列号</label>
+            <label>序��号</label>
             <span>{{ device.sn }}</span>
         </div>
         <div class="detail-item">

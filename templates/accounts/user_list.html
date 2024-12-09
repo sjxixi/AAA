@@ -1,0 +1,412 @@
+{% extends 'base.html' %}
+
+{% block title %}用户管理 - CMDB资产管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="header-content">
+            <h2><i class="fas fa-users"></i> 用户管理</h2>
+            {% if perms.accounts.add_user %}
+            <a href="{% url 'accounts:user_create' %}" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i> 添加用户
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>用户名</th>
+                        <th>邮箱</th>
+                        <th>部门</th>
+                        <th>职位</th>
+                        <th>用户类型</th>
+                        <th>状态</th>
+                        <th class="text-center">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.username }}</td>
+                        <td>{{ user.email|default:"-" }}</td>
+                        <td>{{ user.department|default:"-" }}</td>
+                        <td>{{ user.position|default:"-" }}</td>
+                        <td>
+                            <span class="user-type {{ user.user_type }}">
+                                {{ user.get_user_type_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge {% if user.is_active %}active{% else %}inactive{% endif %}">
+                                <i class="fas fa-circle"></i>
+                                {{ user.is_active|yesno:"激活,禁用" }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="action-buttons">
+                                {% if perms.accounts.change_user %}
+                                <a href="{% url 'accounts:user_edit' user.id %}" class="btn btn-sm btn-primary" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% endif %}
+                                
+                                {% if perms.auth.change_user %}
+                                <a href="{% url 'accounts:user_permissions' user.id %}" class="btn btn-sm btn-info" title="权限">
+                                    <i class="fas fa-key"></i>
+                                </a>
+                                {% endif %}
+                                
+                                {% if perms.accounts.delete_user and not user.is_admin %}
+                                <button type="submit" class="btn btn-sm btn-danger" 
+                                        onclick="deleteUser('{{ user.id }}', '{{ user.username }}')"
+                                        title="删除"
+                                        {% if user.is_admin %}disabled{% endif %}>
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">暂无用户数据</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <nav class="pagination-container">
+            <ul class="pagination">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 卡片样式 */
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 20px;
+}
+
+.card-header {
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-content h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.header-content h2 i {
+    color: #3498db;
+}
+
+/* 表格样式 */
+.table {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.table th {
+    background: #f8f9fa;
+    color: #2c3e50;
+    font-weight: 600;
+    padding: 12px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table td {
+    padding: 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* 用户类型标签 */
+.user-type {
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.user-type.admin {
+    background-color: #3498db;
+    color: white;
+}
+
+.user-type.user {
+    background-color: #2ecc71;
+    color: white;
+}
+
+/* 状态标签 */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.85rem;
+}
+
+.status-badge.active {
+    background-color: #e8f5e9;
+    color: #2ecc71;
+}
+
+.status-badge.inactive {
+    background-color: #ffebee;
+    color: #e74c3c;
+}
+
+.status-badge i {
+    font-size: 0.8rem;
+}
+
+/* 操作按钮容器 */
+.action-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 32px);  /* 固定三列，每列32px */
+    gap: 6px;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 108px;  /* 3个按钮 * 32px + 2个间隔 * 6px */
+}
+
+/* 所有操作按钮的基础样式 */
+.action-buttons .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+/* 按钮图标样式 */
+.action-buttons .btn i {
+    font-size: 14px;
+    line-height: 1;
+}
+
+/* 编辑按钮 - 始终在第一列 */
+.action-buttons .btn-primary {
+    grid-column: 1;
+    background-color: #3498db;
+    color: white;
+}
+
+/* 权限按钮 - 始终在第二列 */
+.action-buttons .btn-info {
+    grid-column: 2;
+    background-color: #17a2b8;
+    color: white;
+}
+
+/* 删除按钮 - 始终在第三列 */
+.action-buttons .btn-danger {
+    grid-column: 3;
+    background-color: #e74c3c;
+    color: white;
+}
+
+/* 表格中的操作列 */
+.table th:last-child,
+.table td:last-child {
+    width: 140px;  /* 增加一点宽度以适应三个按钮 */
+    padding: 8px 16px;
+    text-align: right;
+}
+
+/* 响应式布局调整 */
+@media (max-width: 768px) {
+    .action-buttons {
+        grid-template-columns: repeat(3, 36px);  /* 移动端稍微加大按钮 */
+        gap: 8px;
+        justify-content: center;
+        min-width: 124px;  /* 3个按钮 * 36px + 2个间隔 * 8px */
+    }
+
+    .action-buttons .btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .action-buttons .btn i {
+        font-size: 16px;
+    }
+
+    .table th:last-child,
+    .table td:last-child {
+        width: auto;
+        text-align: center;
+    }
+}
+
+/* 分页样式 */
+.pagination-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.pagination {
+    display: flex;
+    padding-left: 0;
+    list-style: none;
+    border-radius: 4px;
+}
+
+.page-item {
+    margin: 0 2px;
+}
+
+.page-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 6px;
+    color: #3498db;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+
+.page-link:hover {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+    color: #2980b9;
+}
+
+.page-item.active .page-link {
+    background-color: #3498db;
+    border-color: #3498db;
+    color: white;
+}
+
+.page-item.disabled .page-link {
+    color: #6c757d;
+    pointer-events: none;
+    background-color: white;
+    border-color: #dee2e6;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .action-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .btn-sm {
+        padding: 6px 12px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function deleteUser(userId, username) {
+    if (confirm(`确定要删除用户 ${username} 吗？`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/accounts/users/${userId}/delete/`;
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %} 

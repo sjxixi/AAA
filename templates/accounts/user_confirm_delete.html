@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}删除用户 - CMDB资产管理系统{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h2>删除用户</h2>
+    </div>
+    <div class="card-body">
+        <p>确定要删除用户 "{{ user.username }}" 吗？</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger">确认删除</button>
+                <a href="{% url 'accounts:user_list' %}" class="btn btn-secondary">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.form-actions {
+    margin-top: 1rem;
+}
+
+.btn {
+    margin-right: 0.5rem;
+}
+</style>
+{% endblock %} 

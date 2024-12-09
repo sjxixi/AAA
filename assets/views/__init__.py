@@ -22,22 +22,33 @@ import json
 @login_required
 def dashboard(request):
     """仪表盘视图"""
-    # 获取所有数据中心
-    datacenters = DataCenter.objects.all()
+    # 获取用户有权限的数据中心
+    if request.user.is_admin:
+        datacenters = DataCenter.objects.all()
+    else:
+        datacenters = request.user.data_centers.all()
 
     # 为每个数据中心添加设备统计
     for dc in datacenters:
-        dc.server_count = dc.server_set.count()
-        dc.network_count = dc.networkdevice_set.count()
-        dc.storage_count = dc.storagedevice_set.count()
-        dc.security_count = dc.securitydevice_set.count()
+        # 服务器统计
+        dc.server_count = Server.objects.filter(data_center=dc).count()
+        
+        # 网络设备统计
+        dc.network_count = NetworkDevice.objects.filter(data_center=dc).count()
+        
+        # 存储设备统计
+        dc.storage_count = StorageDevice.objects.filter(data_center=dc).count()
+        
+        # 安全设备统计
+        dc.security_count = SecurityDevice.objects.filter(data_center=dc).count()
 
+    # 总设备统计（只统计用户有权限的数据中心的设备）
     context = {
-        'datacenter_count': DataCenter.objects.count(),
-        'server_count': Server.objects.count(),
-        'network_count': NetworkDevice.objects.count(),
-        'storage_count': StorageDevice.objects.count(),
-        'security_count': SecurityDevice.objects.count(),
+        'datacenter_count': datacenters.count(),
+        'server_count': Server.objects.filter(data_center__in=datacenters).count(),
+        'network_count': NetworkDevice.objects.filter(data_center__in=datacenters).count(),
+        'storage_count': StorageDevice.objects.filter(data_center__in=datacenters).count(),
+        'security_count': SecurityDevice.objects.filter(data_center__in=datacenters).count(),
         'datacenters': datacenters
     }
     return render(request, 'assets/dashboard.html', context)
@@ -46,7 +57,13 @@ def dashboard(request):
 @login_required
 def datacenter_list(request):
     """数据中心列表视图"""
-    filter = DataCenterFilter(request.GET, queryset=DataCenter.objects.all())
+    # 根据用户权限过滤数据中心
+    if request.user.is_admin:
+        queryset = DataCenter.objects.all()
+    else:
+        queryset = request.user.data_centers.all()
+
+    filter = DataCenterFilter(request.GET, queryset=queryset)
 
     # 处理导出请求
     if 'export' in request.GET:
@@ -80,12 +97,20 @@ def datacenter_list(request):
 def datacenter_detail(request, pk):
     """数据中心详情视图"""
     datacenter = get_object_or_404(DataCenter, pk=pk)
+    # 检查用户是否有权限访问该数据中心
+    if not request.user.is_admin and not request.user.data_centers.filter(id=pk).exists():
+        messages.error(request, '您没有权限访问该数据中心')
+        return redirect('assets:datacenter_list')
     return render(request, 'assets/datacenter_detail.html', {'datacenter': datacenter})
 
 
 @login_required
 def datacenter_create(request):
     """创建数据中心视图"""
+    if not request.user.is_admin:
+        messages.error(request, '只有管理员可以创建数据中心')
+        return redirect('assets:datacenter_list')
+
     if request.method == 'POST':
         form = DataCenterForm(request.POST)
         if form.is_valid():
@@ -99,8 +124,14 @@ def datacenter_create(request):
 
 @login_required
 def datacenter_edit(request, pk):
-    """编辑数据中心视图"""
+    """数据中心编辑视图"""
     datacenter = get_object_or_404(DataCenter, pk=pk)
+    
+    # 检查权限
+    if not request.user.is_admin:
+        messages.error(request, '只有管理员可以编辑数据中心')
+        return redirect('assets:datacenter_detail', pk=pk)
+    
     if request.method == 'POST':
         form = DataCenterForm(request.POST, instance=datacenter)
         if form.is_valid():
@@ -109,14 +140,23 @@ def datacenter_edit(request, pk):
             return redirect('assets:datacenter_detail', pk=datacenter.pk)
     else:
         form = DataCenterForm(instance=datacenter)
-    return render(request, 'assets/datacenter_form.html',
-                  {'form': form, 'datacenter': datacenter, 'title': '编辑数据中心'})
+    
+    context = {
+        'form': form,
+        'title': f'编辑数据中心 - {datacenter.name}'
+    }
+    return render(request, 'assets/datacenter_form.html', context)
 
 
 @login_required
 def datacenter_delete(request, pk):
     """删除数据中心视图"""
     datacenter = get_object_or_404(DataCenter, pk=pk)
+    # 检查用户是否有权限删除该数据中心
+    if not request.user.is_admin:
+        messages.error(request, '只有管理员可以删除数据中心')
+        return redirect('assets:datacenter_list')
+
     if request.method == 'POST':
         try:
             datacenter.delete()
@@ -249,7 +289,7 @@ def import_data(request):
             if not result.has_errors():
                 # 如果测试通过，执行实际导入
                 result = resource.import_data(dataset, dry_run=False)
-                messages.success(request, f'成功导入 {result.total_rows} 条数据')
+                messages.success(request, f'成功导入 {result.total_rows} 数据')
             else:
                 # 收集所有错误信息
                 error_messages = []

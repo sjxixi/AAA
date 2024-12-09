@@ -841,4 +841,88 @@ body.login-page .footer {
     cursor: not-allowed;
     transform: none !important;
     box-shadow: none !important;
+}
+
+/* 用户信息区域样式 */
+.user-info {
+    display: flex;
+    align-items: center;
+    padding: 20px 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 10px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(52, 152, 219, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 12px;
+}
+
+.user-avatar i {
+    font-size: 24px;
+    color: #3498db;
+}
+
+.user-details {
+    flex: 1;
+}
+
+.user-name {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.user-role {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .user-info {
+        padding: 15px 10px;
+    }
+    
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .user-avatar i {
+        font-size: 20px;
+    }
+    
+    .user-name {
+        font-size: 14px;
+    }
+}
+
+/* 当导航栏收起时的样式 */
+.navbar.collapsed .user-details {
+    display: none;
+}
+
+.navbar.collapsed .user-info {
+    padding: 10px;
+    justify-content: center;
+}
+
+.navbar.collapsed .user-avatar {
+    margin-right: 0;
+}
+
+/* 管理员头像样式 */
+.user-info.admin .user-avatar {
+    background: rgba(231, 76, 60, 0.1);
+}
+
+.user-info.admin .user-avatar i {
+    color: #e74c3c;
 } 

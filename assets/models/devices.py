@@ -23,6 +23,29 @@ class BaseDevice(models.Model):
 
     class Meta:
         abstract = True
+        default_permissions = ('view', 'add', 'change', 'delete')
+        permissions = [
+            ('export_device', '导出设备信息'),
+            ('import_device', '导入设备信息'),
+        ]
+
+    def can_edit(self, user):
+        """检查用户是否可以编辑该设备"""
+        if user.is_admin:
+            return True
+        # 检查用户是否同时具有编辑权限和数据中心权限
+        model_name = self._meta.model_name
+        return user.has_perm(f'assets.change_{model_name}', self)  # 传入 self 作为 obj 参数
+
+    def can_edit_by(self, user):
+        """
+        模板友好的编辑权限检查方法
+        """
+        if user.is_admin:
+            return True
+        # 检查用户是否同时具有编辑权限和数据中心权限
+        model_name = self._meta.model_name
+        return user.has_perm(f'assets.change_{model_name}', self)
 
 class Server(BaseDevice):
     """服务器模型"""
@@ -41,6 +64,11 @@ class Server(BaseDevice):
     class Meta:
         verbose_name = '服务器'
         verbose_name_plural = verbose_name
+        default_permissions = ('view', 'add', 'change', 'delete')
+        permissions = [
+            ('export_server', '导出服务器信息'),
+            ('import_server', '导入服务器信息'),
+        ]
 
     def __str__(self):
         return self.hostname
@@ -59,6 +87,11 @@ class NetworkDevice(BaseDevice):
     class Meta:
         verbose_name = '网络设备'
         verbose_name_plural = verbose_name
+        default_permissions = ('view', 'add', 'change', 'delete')
+        permissions = [
+            ('export_networkdevice', '导出网络设备信息'),
+            ('import_networkdevice', '导入网络设备信息'),
+        ]
 
     def __str__(self):
         return self.name
@@ -77,6 +110,11 @@ class StorageDevice(BaseDevice):
     class Meta:
         verbose_name = '存储设备'
         verbose_name_plural = verbose_name
+        default_permissions = ('view', 'add', 'change', 'delete')
+        permissions = [
+            ('export_storagedevice', '导出存储设备信息'),
+            ('import_storagedevice', '导入存储设备信息'),
+        ]
 
     def __str__(self):
         return self.name
@@ -95,6 +133,11 @@ class SecurityDevice(BaseDevice):
     class Meta:
         verbose_name = '安全设备'
         verbose_name_plural = verbose_name
+        default_permissions = ('view', 'add', 'change', 'delete')
+        permissions = [
+            ('export_securitydevice', '导出安全设备信息'),
+            ('import_securitydevice', '导入安全设备信息'),
+        ]
 
     def __str__(self):
         return self.name 

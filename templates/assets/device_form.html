@@ -1,67 +1,44 @@
 {% extends 'base.html' %}
-{% load static %}
-
-{% block title %}{{ title }} - CMDB资产管理系统{% endblock %}
 
 {% block content %}
 <div class="card">
     <div class="card-header">
         <h2>{{ title }}</h2>
     </div>
+    
     <div class="card-body">
-        <form method="post" onsubmit="return validateForm('deviceForm')" id="deviceForm">
+        <form method="post" class="device-form">
             {% csrf_token %}
             {% for field in form %}
             <div class="form-group">
-                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}：</label>
-                {{ field }}
-                {% if field.errors %}
-                <div class="alert alert-danger">
-                    {{ field.errors.0 }}
-                </div>
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {% if can_edit %}
+                    {{ field }}
+                {% else %}
+                    <input type="text" class="form-control" value="{{ field.value|default:'' }}" readonly>
                 {% endif %}
                 {% if field.help_text %}
                 <small class="form-text text-muted">{{ field.help_text }}</small>
                 {% endif %}
+                {% if field.errors %}
+                <div class="invalid-feedback">
+                    {{ field.errors }}
+                </div>
+                {% endif %}
             </div>
             {% endfor %}
+            
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">保存</button>
-                <a href="{% url view_list %}" class="btn btn-secondary">取消</a>
+                {% if can_edit %}
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> 保存
+                </button>
+                {% endif %}
+                <a href="javascript:history.back()" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> 返回
+                </a>
             </div>
         </form>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_css %}
-<style>
-.form-group {
-    margin-bottom: 1.5rem;
-}
-
-.form-actions {
-    margin-top: 2rem;
-    padding-top: 1rem;
-    border-top: 1px solid #dee2e6;
-}
-</style>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // 为所有日期输入框设置默认值
-    const dateInputs = document.querySelectorAll('input[type="date"]');
-    dateInputs.forEach(input => {
-        if (input.value) {
-            // 确保日期格式正确 (YYYY-MM-DD)
-            const date = new Date(input.value);
-            if (!isNaN(date.getTime())) {
-                input.value = date.toISOString().split('T')[0];
-            }
-        }
-    });
-});
-</script>
 {% endblock %} 

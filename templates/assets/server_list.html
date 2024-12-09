@@ -18,4 +18,12 @@
 <td class="text-wrap">{{ device.business_system }}</td>
 <td class="text-nowrap">{{ device.data_center }}</td>
 <td class="text-nowrap">{{ device.get_status_display }}</td>
+{% endblock %}
+
+{% block add_button %}
+{% if perms.add %}
+<button type="button" class="btn btn-primary" id="addBtn">
+    <i class="fas fa-plus"></i> 添加服务器
+</button>
+{% endif %}
 {% endblock %} 

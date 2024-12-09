@@ -1,0 +1,363 @@
+{% extends 'base.html' %}
+{% load permission_tags %}
+
+{% block title %}管理用户权限 - {{ user_obj.username }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div class="header-content">
+            <h2><i class="fas fa-key"></i> 管理用户权限</h2>
+            <div class="user-info">
+                <span class="username">{{ user_obj.username }}</span>
+                <span class="user-type {{ user_obj.user_type }}">
+                    <i class="fas fa-user-tag"></i> {{ user_obj.get_user_type_display }}
+                </span>
+                <span class="user-status {% if user_obj.is_active %}active{% else %}inactive{% endif %}">
+                    <i class="fas fa-circle"></i> {{ user_obj.is_active|yesno:"激活,禁用" }}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <form method="post" class="permission-form">
+            {% csrf_token %}
+            
+            <!-- 数据中心权限 -->
+            <div class="permission-section">
+                <div class="section-header">
+                    <i class="fas fa-database"></i>
+                    <h3>数据中心访问权限</h3>
+                </div>
+                <div class="datacenter-permissions">
+                    {{ form.data_centers }}
+                </div>
+            </div>
+
+            <!-- 操作权限 -->
+            <div class="permission-section">
+                <div class="section-header">
+                    <i class="fas fa-shield-alt"></i>
+                    <h3>操作权限</h3>
+                </div>
+                
+                <div class="permissions-container">
+                    {% for model_name, group in form.permission_fields.items %}
+                    <div class="permission-group">
+                        <div class="group-header">
+                            <h4>{{ group.name }}</h4>
+                            <button type="button" class="btn-select-all" data-group="{{ model_name }}">
+                                <i class="fas fa-check-square"></i> 全选
+                            </button>
+                        </div>
+                        <div class="permission-items">
+                            {% for perm in group.permissions %}
+                            <label class="permission-item">
+                                {{ form|get_field:perm.field_name }}
+                                <span class="permission-name">{{ perm.label }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> 保存更改
+                </button>
+                <a href="{% url 'accounts:user_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> 取消
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* 卡片样式 */
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin: 20px;
+}
+
+.card-header {
+    padding: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-content h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #2c3e50;
+}
+
+.header-content h2 i {
+    margin-right: 10px;
+    color: #3498db;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.username {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.user-type {
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.user-type.admin {
+    background-color: #3498db;
+    color: white;
+}
+
+.user-type.user {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.user-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+}
+
+.user-status.active {
+    color: #2ecc71;
+}
+
+.user-status.inactive {
+    color: #e74c3c;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+/* 权限部分样式 */
+.permission-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.section-header i {
+    font-size: 1.2rem;
+    color: #3498db;
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    color: #2c3e50;
+}
+
+/* 数据中心权限样式 */
+.datacenter-permissions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    padding: 15px;
+    background: white;
+    border-radius: 6px;
+}
+
+.datacenter-permissions label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.datacenter-permissions label:hover {
+    background: #e9ecef;
+}
+
+/* 操作权限样式 */
+.permissions-container {
+    display: grid;
+    gap: 20px;
+}
+
+.permission-group {
+    background: white;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: #e9ecef;
+}
+
+.group-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #2c3e50;
+}
+
+.btn-select-all {
+    background: none;
+    border: none;
+    color: #3498db;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-select-all:hover {
+    background: #d1ecf1;
+}
+
+.permission-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    padding: 15px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.permission-item:hover {
+    background: #e9ecef;
+}
+
+.permission-name {
+    font-size: 0.9rem;
+    color: #2c3e50;
+}
+
+/* 表单操作按钮 */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+    border: none;
+    text-decoration: none;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+/* 响应式布局 */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .user-info {
+        flex-wrap: wrap;
+    }
+
+    .permission-items {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 全选按钮功能
+    document.querySelectorAll('.btn-select-all').forEach(button => {
+        button.addEventListener('click', function() {
+            const group = this.dataset.group;
+            const checkboxes = document.querySelectorAll(`input[name^="${group}_"]`);
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            checkboxes.forEach(cb => {
+                cb.checked = !allChecked;
+            });
+            
+            this.innerHTML = allChecked ? 
+                '<i class="fas fa-check-square"></i> 全选' : 
+                '<i class="fas fa-square"></i> 取消全选';
+        });
+    });
+});
+</script>
+{% endblock %} 

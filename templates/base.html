@@ -21,6 +21,20 @@
             </a>
             
             {% if user.is_authenticated %}
+            <div class="user-info {% if user.is_admin %}admin{% endif %}">
+                <div class="user-avatar">
+                    {% if user.is_admin %}
+                    <i class="fas fa-user-shield"></i>
+                    {% else %}
+                    <i class="fas fa-user"></i>
+                    {% endif %}
+                </div>
+                <div class="user-details">
+                    <div class="user-name">{{ user.username }}</div>
+                    <div class="user-role">{{ user.get_user_type_display }}</div>
+                </div>
+            </div>
+
             <ul class="nav-links">
                 <li><a href="{% url 'assets:dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>
                     <i class="fas fa-home"></i>
@@ -46,6 +60,12 @@
                     <i class="fas fa-shield-alt"></i>
                     <span>安全设备</span>
                 </a></li>
+                {% if user.is_admin %}
+                <li><a href="{% url 'accounts:user_list' %}" {% if 'accounts' in request.path %}class="active"{% endif %}>
+                    <i class="fas fa-users"></i>
+                    <span>用户管理</span>
+                </a></li>
+                {% endif %}
             </ul>
             <form method="post" action="{% url 'logout' %}" class="logout-form">
                 {% csrf_token %}

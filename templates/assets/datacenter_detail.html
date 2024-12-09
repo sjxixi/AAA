@@ -100,17 +100,192 @@
                     <button class="tab-btn" onclick="showTab('security')">安全设备</button>
                 </div>
                 
+                <!-- 服务器列表 -->
                 <div id="servers" class="tab-content active">
-                    {% include "assets/partials/server_list_table.html" with servers=datacenter.server_set.all %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>名称</th>
+                                <th>型号</th>
+                                <th>IP地址</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for device in datacenter.server_set.all %}
+                            <tr>
+                                <td>{{ device.name }}</td>
+                                <td>{{ device.model }}</td>
+                                <td>{{ device.ip_address }}</td>
+                                <td>{{ device.get_status_display }}</td>
+                                <td>
+                                    {% if perms.assets.view_server %}
+                                    <a href="{% url 'assets:server_detail' device.id %}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i> 查看
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if perms.assets.change_server %}
+                                    <a href="{% url 'assets:server_edit' device.id %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i> 编辑
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if perms.assets.delete_server %}
+                                    <form method="post" action="{% url 'assets:server_delete' device.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除吗？')">
+                                            <i class="fas fa-trash"></i> 删除
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
+
+                <!-- 网络设备列表 -->
                 <div id="network" class="tab-content">
-                    {% include "assets/partials/network_list_table.html" with devices=datacenter.networkdevice_set.all %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>名称</th>
+                                <th>型号</th>
+                                <th>IP地址</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for device in datacenter.networkdevice_set.all %}
+                            <tr>
+                                <td>{{ device.name }}</td>
+                                <td>{{ device.model }}</td>
+                                <td>{{ device.ip_address }}</td>
+                                <td>{{ device.get_status_display }}</td>
+                                <td>
+                                    {% if perms.assets.view_networkdevice %}
+                                    <a href="{% url 'assets:network_detail' device.id %}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i> 查看
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if perms.assets.change_networkdevice %}
+                                    <a href="{% url 'assets:network_edit' device.id %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i> 编辑
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if perms.assets.delete_networkdevice %}
+                                    <form method="post" action="{% url 'assets:network_delete' device.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除吗？')">
+                                            <i class="fas fa-trash"></i> 删除
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
+
+                <!-- 存储设备列表 -->
                 <div id="storage" class="tab-content">
-                    {% include "assets/partials/storage_list_table.html" with devices=datacenter.storagedevice_set.all %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>名称</th>
+                                <th>型号</th>
+                                <th>IP地址</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for device in datacenter.storagedevice_set.all %}
+                            <tr>
+                                <td>{{ device.name }}</td>
+                                <td>{{ device.model }}</td>
+                                <td>{{ device.ip_address }}</td>
+                                <td>{{ device.get_status_display }}</td>
+                                <td>
+                                    {% if perms.assets.view_storagedevice %}
+                                    <a href="{% url 'assets:storage_detail' device.id %}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i> 查看
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if perms.assets.change_storagedevice %}
+                                    <a href="{% url 'assets:storage_edit' device.id %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i> 编辑
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if perms.assets.delete_storagedevice %}
+                                    <form method="post" action="{% url 'assets:storage_delete' device.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除吗？')">
+                                            <i class="fas fa-trash"></i> 删除
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
+
+                <!-- 安全设备列表 -->
                 <div id="security" class="tab-content">
-                    {% include "assets/partials/security_list_table.html" with devices=datacenter.securitydevice_set.all %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>名称</th>
+                                <th>型号</th>
+                                <th>IP地址</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for device in datacenter.securitydevice_set.all %}
+                            <tr>
+                                <td>{{ device.name }}</td>
+                                <td>{{ device.model }}</td>
+                                <td>{{ device.ip_address }}</td>
+                                <td>{{ device.get_status_display }}</td>
+                                <td>
+                                    {% if perms.assets.view_securitydevice %}
+                                    <a href="{% url 'assets:security_detail' device.id %}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-eye"></i> 查看
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if perms.assets.change_securitydevice %}
+                                    <a href="{% url 'assets:security_edit' device.id %}" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i> 编辑
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if perms.assets.delete_securitydevice %}
+                                    <form method="post" action="{% url 'assets:security_delete' device.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('确定要删除吗？')">
+                                            <i class="fas fa-trash"></i> 删除
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
