@@ -323,14 +323,14 @@ class ServerView(BaseDeviceView):
         """权限检查"""
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-            
+
         # 检查数据中心权限
         if 'pk' in kwargs:
             device = get_object_or_404(self.model, pk=kwargs['pk'])
             if not request.user.has_datacenter_perm(device.data_center.id):
                 messages.error(request, '您没有该数据中心的操作权限')
                 return redirect('assets:dashboard')
-                
+
         return super().dispatch(request, *args, **kwargs)
 
     def get(self, request, pk=None):
@@ -526,7 +526,7 @@ class StorageDeviceView(BaseDeviceView):
             if 'delete' in request.path:
                 return self.delete_view(request, pk)
             if not request.user.has_perm('assets.change_storagedevice'):
-                return JsonResponse({'status': 'error', 'message': '没有修��权限'})
+                return JsonResponse({'status': 'error', 'message': '没有修改权限'})
             return self.edit_view(request, pk)
 
 
@@ -739,4 +739,4 @@ __all__ = [
     'network_create',
     'storage_create',
     'security_create'
-] 
+]
